@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JobSphere - Enterprise Career & Talent Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="navbar">
+    <div class="brand" onclick="app.showView('jobs')">
+      <div class="brand-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+      </div>
+      <span>Job<span style="color:#60a5fa">Sphere</span></span>
+      <span class="brand-badge">Enterprise</span>
+    </div>
+
+    <!-- Quick Role-Switcher / Demo Logins -->
+    <div class="demo-pills" id="demoPills">
+      <span style="font-size:0.75rem; color:var(--text-muted); margin-right:4px;">Quick Demo:</span>
+      <button class="demo-pill" onclick="app.demoLogin('admin@jobportal.com', 'admin123')">Admin</button>
+      <button class="demo-pill" onclick="app.demoLogin('employer@techcorp.com', 'employer123')">Employer</button>
+      <button class="demo-pill" onclick="app.demoLogin('seeker@example.com', 'seeker123')">Job Seeker</button>
+    </div>
+
+    <!-- Nav Links & Auth Controls -->
+    <div class="nav-links">
+      <button class="nav-btn active" id="navJobsBtn" onclick="app.showView('jobs')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        Browse Jobs
+      </button>
+
+      <button class="nav-btn" id="navDashboardBtn" style="display:none;" onclick="app.openDashboard()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+        <span id="navDashboardText">Dashboard</span>
+      </button>
+
+      <!-- Auth State UI -->
+      <div id="loggedOutNav" style="display: flex; gap: 0.5rem;">
+        <button class="btn-secondary" onclick="app.openAuthModal('login')">Sign In</button>
+        <button class="btn-primary" onclick="app.openAuthModal('register')">Register</button>
+      </div>
+
+      <div id="loggedInNav" style="display:none; align-items:center; gap:0.75rem;">
+        <div class="user-profile-badge">
+          <div class="user-avatar" id="navUserAvatar">U</div>
+          <div style="line-height:1.2;">
+            <div style="font-size:0.85rem; font-weight:600;" id="navUserName">User</div>
+            <span class="role-tag" id="navUserRole">ROLE</span>
+          </div>
+        </div>
+        <button class="btn-secondary" style="padding:0.45rem 0.85rem;" onclick="app.logout()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+          Logout
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main View Area -->
+  <main class="main-wrapper">
+
+    <!-- VIEW: PUBLIC JOB EXPLORER -->
+    <div id="viewJobs">
+      <section class="hero-section">
+        <h1 class="hero-title">Discover Your Next <span class="hero-gradient">Career Milestone</span></h1>
+        <p class="hero-subtitle">Connect with high-growth companies, verified employers, and cutting-edge engineering roles across the globe.</p>
+
+        <!-- Search Form Bar -->
+        <div class="search-box-container">
+          <div class="search-field">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="text" id="searchKeyword" class="search-input" placeholder="Job title, skills, or company..." onkeydown="if(event.key==='Enter') app.searchJobs()">
+          </div>
+          <div class="search-field" style="flex:1 1 180px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+            <input type="text" id="searchLocation" class="search-input" placeholder="Location or Remote" onkeydown="if(event.key==='Enter') app.searchJobs()">
+          </div>
+          <div class="search-field" style="flex:0 1 160px;">
+            <select id="searchJobType" class="search-select" onchange="app.searchJobs()">
+              <option value="">All Job Types</option>
+              <option value="Full-time">Full-time</option>
+              <option value="Part-time">Part-time</option>
+              <option value="Contract">Contract</option>
+              <option value="Remote">Remote</option>
+            </select>
+          </div>
+          <button class="btn-primary" onclick="app.searchJobs()">
+            Search Jobs
+          </button>
+        </div>
+      </section>
+
+      <!-- Active Job Listings Grid -->
+      <div class="panel-header">
+        <h2 class="panel-title" id="jobListingsHeading">Featured Opportunities</h2>
+        <span style="font-size:0.9rem; color:var(--text-muted);" id="jobCountLabel">Loading listings...</span>
+      </div>
+      <div class="job-grid" id="publicJobsGrid">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+
+    <!-- VIEW: ADMIN DASHBOARD -->
+    <div id="viewAdminDashboard" style="display:none;">
+      <div class="dashboard-header">
+        <div class="dashboard-title-group">
+          <h1>System Administration Dashboard</h1>
+          <p>Supervise user accounts, moderate job postings, monitor real-time user activity, and configure system parameters.</p>
+        </div>
+      </div>
+
+      <!-- Admin Stat Metric Cards -->
+      <div class="stats-grid" id="adminStatsGrid">
+        <!-- Injected via JS -->
+      </div>
+
+      <!-- Admin Tabs -->
+      <div class="dashboard-tabs">
+        <button class="tab-btn active" onclick="app.setAdminTab('users', this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          User Management
+        </button>
+        <button class="tab-btn" onclick="app.setAdminTab('approvals', this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          Job Approvals
+          <span class="tab-badge" id="adminPendingBadge">0</span>
+        </button>
+        <button class="tab-btn" onclick="app.setAdminTab('settings', this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+          System Settings
+        </button>
+        <button class="tab-btn" onclick="app.setAdminTab('stats', this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+          Job & System Stats
+        </button>
+        <button class="tab-btn" onclick="app.setAdminTab('activities', this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Activity Monitoring
+        </button>
+      </div>
+
+      <!-- Admin Tab Content: Users -->
+      <div id="adminTabUsers" class="card-panel">
+        <div class="panel-header">
+          <h3 class="panel-title">Platform User Accounts</h3>
+          <button class="btn-primary" onclick="app.openAddUserModal()">+ Create User</button>
+        </div>
+        <div class="table-responsive">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Headline</th>
+                <th>Registered</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="adminUsersTableBody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Admin Tab Content: Approvals -->
+      <div id="adminTabApprovals" class="card-panel" style="display:none;">
+        <div class="panel-header">
+          <h3 class="panel-title">Job Postings Approval Queue</h3>
+          <span style="color:var(--text-muted); font-size:0.85rem;">Approve or reject employer listings prior to public visibility.</span>
+        </div>
+        <div class="table-responsive">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>Job Title</th>
+                <th>Employer / Company</th>
+                <th>Location / Type</th>
+                <th>Salary</th>
+                <th>Status</th>
+                <th>Decision Actions</th>
+              </tr>
+            </thead>
+            <tbody id="adminApprovalsTableBody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Admin Tab Content: System Settings -->
+      <div id="adminTabSettings" class="card-panel" style="display:none;">
+        <div class="panel-header">
+          <h3 class="panel-title">System-wide Settings & Configurations</h3>
+          <button class="btn-primary" onclick="app.saveSystemSettings()">Save Configurations</button>
+        </div>
+        <div id="adminSettingsContainer" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:1.25rem;">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+
+      <!-- Admin Tab Content: Statistics -->
+      <div id="adminTabStats" class="card-panel" style="display:none;">
+        <div class="panel-header">
+          <h3 class="panel-title">Platform Analytics & Engagement Trends</h3>
+        </div>
+        <div id="adminStatsCharts" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:2rem;">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+
+      <!-- Admin Tab Content: Real-time Activities -->
+      <div id="adminTabActivities" class="card-panel" style="display:none;">
+        <div class="panel-header">
+          <h3 class="panel-title">Real-Time User & System Activity Feed</h3>
+          <button class="btn-secondary" onclick="app.loadAdminActivities()">Refresh Logs</button>
+        </div>
+        <div class="activity-feed" id="adminActivityFeed">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW: EMPLOYER DASHBOARD -->
+    <div id="viewEmployerDashboard" style="display:none;">
+      <div class="dashboard-header">
+        <div class="dashboard-title-group">
+          <h1>Employer Hiring Hub</h1>
+          <p>Post open listings, review incoming applicants, interview candidates, and analyze hiring funnel statistics.</p>
+        </div>
+        <button class="btn-primary" onclick="app.openJobModal()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          Post New Job
+        </button>
+      </div>
+
+      <!-- Employer Stat Cards -->
+      <div class="stats-grid" id="employerStatsGrid">
+        <!-- Rendered via JS -->
+      </div>
+
+      <!-- Employer Tabs -->
+      <div class="dashboard-tabs">
+        <button class="tab-btn active" onclick="app.setEmployerTab('jobs', this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          My Job Listings
+        </button>
+        <button class="tab-btn" onclick="app.setEmployerTab('applications', this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/></svg>
+          Candidate Applications
+          <span class="tab-badge" id="employerAppBadge">0</span>
+        </button>
+        <button class="tab-btn" onclick="app.setEmployerTab('messages', this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Candidate Messages
+        </button>
+        <button class="tab-btn" onclick="app.setEmployerTab('analytics', this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+          Application Analytics
+        </button>
+      </div>
+
+      <!-- Employer Tab: Job Management -->
+      <div id="employerTabJobs" class="card-panel">
+        <div class="panel-header">
+          <h3 class="panel-title">Manage Active & Past Job Postings</h3>
+        </div>
+        <div class="table-responsive">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>Job Title</th>
+                <th>Location / Type</th>
+                <th>Salary</th>
+                <th>Listing Status</th>
+                <th>Approval</th>
+                <th>Created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="employerJobsTableBody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Employer Tab: Applications -->
+      <div id="employerTabApplications" class="card-panel" style="display:none;">
+        <div class="panel-header">
+          <h3 class="panel-title">Received Candidate Applications</h3>
+        </div>
+        <div class="table-responsive">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>Candidate</th>
+                <th>Applied Job</th>
+                <th>Skills & Qualifications</th>
+                <th>Cover Letter & Resume</th>
+                <th>Status</th>
+                <th>Decision / Status Update</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="employerApplicationsTableBody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Employer Tab: Candidate Messenger -->
+      <div id="employerTabMessages" class="card-panel" style="display:none;">
+        <div class="panel-header">
+          <h3 class="panel-title">Direct Candidate Communication</h3>
+        </div>
+        <div class="chat-container">
+          <div class="chat-contacts-pane">
+            <div class="contacts-header">Applicants & Candidates</div>
+            <div id="employerContactsList">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+          <div class="chat-messages-pane">
+            <div class="chat-messages-header">
+              <span id="chatActiveUser">Select a candidate on the left to chat</span>
+            </div>
+            <div class="messages-stream" id="chatMessagesStream">
+              <!-- Rendered via JS -->
+            </div>
+            <div class="chat-input-bar">
+              <input type="text" id="chatMessageInput" class="chat-input" placeholder="Type a message to candidate..." onkeydown="if(event.key==='Enter') app.sendChatMessage()">
+              <button class="btn-primary" onclick="app.sendChatMessage()">Send</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Employer Tab: Analytics -->
+      <div id="employerTabAnalytics" class="card-panel" style="display:none;">
+        <div class="panel-header">
+          <h3 class="panel-title">Application Distribution & Candidate Engagement</h3>
+        </div>
+        <div id="employerAnalyticsCharts" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:2rem;">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW: JOB SEEKER DASHBOARD -->
+    <div id="viewSeekerDashboard" style="display:none;">
+      <div class="dashboard-header">
+        <div class="dashboard-title-group">
+          <h1>Job Seeker Portal</h1>
+          <p>Track your applications, manage your skills and resume, and view tailored job recommendations.</p>
+        </div>
+      </div>
+
+      <!-- Job Seeker Stat Cards -->
+      <div class="stats-grid" id="seekerStatsGrid">
+        <!-- Rendered via JS -->
+      </div>
+
+      <!-- Job Seeker Tabs -->
+      <div class="dashboard-tabs">
+        <button class="tab-btn active" onclick="app.setSeekerTab('applications', this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/></svg>
+          Application Status & History
+        </button>
+        <button class="tab-btn" onclick="app.setSeekerTab('recommendations', this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          Job Recommendations
+        </button>
+        <button class="tab-btn" onclick="app.setSeekerTab('profile', this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Profile & Resume
+        </button>
+        <button class="tab-btn" onclick="app.setSeekerTab('messages', this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Employer Messages
+        </button>
+      </div>
+
+      <!-- Seeker Tab: Applications Status -->
+      <div id="seekerTabApplications" class="card-panel">
+        <div class="panel-header">
+          <h3 class="panel-title">My Job Application Tracker</h3>
+        </div>
+        <div class="table-responsive">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>Job Title</th>
+                <th>Company</th>
+                <th>Applied Date</th>
+                <th>Current Status</th>
+                <th>Resume Submitted</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="seekerApplicationsTableBody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Seeker Tab: Recommendations -->
+      <div id="seekerTabRecommendations" class="card-panel" style="display:none;">
+        <div class="panel-header">
+          <div>
+            <h3 class="panel-title">Personalized Job Recommendations</h3>
+            <p style="font-size:0.85rem; color:var(--text-muted);">Matches based on your skills profile and career headline.</p>
+          </div>
+        </div>
+        <div class="job-grid" id="seekerRecommendationsGrid">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+
+      <!-- Seeker Tab: Profile & Resume -->
+      <div id="seekerTabProfile" class="card-panel" style="display:none;">
+        <div class="panel-header">
+          <h3 class="panel-title">Personal Profile & Resume Management</h3>
+        </div>
+        <div style="max-width:680px;">
+          <form onsubmit="app.saveProfile(event)">
+            <div class="form-group">
+              <label>Full Name</label>
+              <input type="text" id="profileName" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label>Professional Headline</label>
+              <input type="text" id="profileHeadline" class="form-control" placeholder="e.g. Senior Java Engineer / Cloud Architect">
+            </div>
+            <div class="form-group">
+              <label>Skills & Technologies (comma-separated for matching algorithm)</label>
+              <input type="text" id="profileSkills" class="form-control" placeholder="Java, Spring Boot, React, SQL, Docker, AWS">
+            </div>
+            <div class="form-group">
+              <label>Phone Number</label>
+              <input type="text" id="profilePhone" class="form-control" placeholder="+1 (555) 012-3456">
+            </div>
+            <div class="form-group">
+              <label>Resume Document (PDF, DOC, DOCX)</label>
+              <div style="display:flex; gap:0.75rem; align-items:center;">
+                <input type="file" id="resumeFileInput" class="form-control" accept=".pdf,.doc,.docx" onchange="app.uploadResumeFile(event)">
+                <span id="resumeStatusIndicator" style="font-size:0.85rem; color:var(--text-muted); white-space:nowrap;"></span>
+              </div>
+              <input type="hidden" id="profileResumeUrl">
+              <div id="currentResumeDisplay" style="margin-top:0.5rem; font-size:0.85rem; display:none;">
+                Current Resume: <a id="currentResumeLink" href="#" target="_blank" style="color:#60a5fa; text-decoration:underline;">View Resume</a>
+              </div>
+            </div>
+            <button type="submit" class="btn-primary" style="margin-top:1rem;">Save Profile Changes</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Seeker Tab: Messages -->
+      <div id="seekerTabMessages" class="card-panel" style="display:none;">
+        <div class="panel-header">
+          <h3 class="panel-title">Messages from Employers</h3>
+        </div>
+        <div class="chat-container">
+          <div class="chat-contacts-pane">
+            <div class="contacts-header">Employers</div>
+            <div id="seekerContactsList">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+          <div class="chat-messages-pane">
+            <div class="chat-messages-header">
+              <span id="seekerChatActiveUser">Select an employer to chat</span>
+            </div>
+            <div class="messages-stream" id="seekerChatMessagesStream">
+              <!-- Rendered via JS -->
+            </div>
+            <div class="chat-input-bar">
+              <input type="text" id="seekerChatMessageInput" class="chat-input" placeholder="Type a reply to employer..." onkeydown="if(event.key==='Enter') app.sendSeekerChatMessage()">
+              <button class="btn-primary" onclick="app.sendSeekerChatMessage()">Send</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL: LOGIN / REGISTER -->
+  <div class="modal-backdrop" id="authModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="panel-title" id="authModalTitle">Sign In to JobSphere</h3>
+        <button class="modal-close" onclick="app.closeModals()">&times;</button>
+      </div>
+
+      <!-- Login Form -->
+      <form id="loginForm" onsubmit="app.submitLogin(event)">
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="loginEmail" class="form-control" required placeholder="name@company.com">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="loginPassword" class="form-control" required placeholder="••••••••">
+        </div>
+        <button type="submit" class="btn-primary" style="width:100%; justify-content:center;">Sign In</button>
+        <p style="text-align:center; font-size:0.85rem; color:var(--text-muted); margin-top:1rem;">
+          Don't have an account? <a href="#" style="color:#60a5fa;" onclick="app.openAuthModal('register')">Create one now</a>
+        </p>
+      </form>
+
+      <!-- Register Form -->
+      <form id="registerForm" style="display:none;" onsubmit="app.submitRegister(event)">
+        <div class="form-group">
+          <label>Full Name / Company Name</label>
+          <input type="text" id="regName" class="form-control" required placeholder="Alex Morgan or Acme Corp">
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="regEmail" class="form-control" required placeholder="name@company.com">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="regPassword" class="form-control" required placeholder="••••••••">
+        </div>
+        <div class="form-group">
+          <label>Account Role</label>
+          <select id="regRole" class="form-control" required>
+            <option value="JOB_SEEKER">Job Seeker (Search & Apply)</option>
+            <option value="EMPLOYER">Employer (Post Jobs & Hire)</option>
+            <option value="ADMIN">System Administrator</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-primary" style="width:100%; justify-content:center;">Create Account</button>
+        <p style="text-align:center; font-size:0.85rem; color:var(--text-muted); margin-top:1rem;">
+          Already registered? <a href="#" style="color:#60a5fa;" onclick="app.openAuthModal('login')">Sign In</a>
+        </p>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: APPLY FOR JOB -->
+  <div class="modal-backdrop" id="applyModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div>
+          <h3 class="panel-title" id="applyModalJobTitle">Apply for Job</h3>
+          <span style="font-size:0.85rem; color:#60a5fa;" id="applyModalCompany">Company</span>
+        </div>
+        <button class="modal-close" onclick="app.closeModals()">&times;</button>
+      </div>
+      <form onsubmit="app.submitJobApplication(event)">
+        <input type="hidden" id="applyJobId">
+        <div class="form-group">
+          <label>Cover Letter & Introduction</label>
+          <textarea id="applyCoverLetter" class="form-control" placeholder="Share why you're a standout fit for this role..." rows="4" required></textarea>
+        </div>
+        <div class="form-group">
+          <label>Resume Attachment</label>
+          <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:0.4rem;">
+            Defaulting to your profile resume if not uploading a new one.
+          </div>
+          <input type="file" id="applyResumeFileInput" class="form-control" accept=".pdf,.doc,.docx" onchange="app.uploadApplicationResume(event)">
+          <input type="hidden" id="applyResumeUrl">
+          <span id="applyResumeStatus" style="font-size:0.8rem; color:#34d399; margin-top:0.3rem; display:block;"></span>
+        </div>
+        <button type="submit" class="btn-primary" style="width:100%; justify-content:center;">Submit Application</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: POST / EDIT JOB -->
+  <div class="modal-backdrop" id="jobModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="panel-title" id="jobModalTitle">Post New Job Listing</h3>
+        <button class="modal-close" onclick="app.closeModals()">&times;</button>
+      </div>
+      <form onsubmit="app.submitJobPosting(event)">
+        <input type="hidden" id="jobEditId">
+        <div class="form-group">
+          <label>Job Title</label>
+          <input type="text" id="jobTitleInput" class="form-control" placeholder="e.g. Senior Backend Engineer" required>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.75rem;">
+          <div class="form-group">
+            <label>Company Name</label>
+            <input type="text" id="jobCompanyInput" class="form-control" placeholder="Acme Technologies">
+          </div>
+          <div class="form-group">
+            <label>Location</label>
+            <input type="text" id="jobLocationInput" class="form-control" placeholder="e.g. San Francisco or Remote" required>
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.75rem;">
+          <div class="form-group">
+            <label>Employment Type</label>
+            <select id="jobTypeInput" class="form-control" required>
+              <option value="Full-time">Full-time</option>
+              <option value="Part-time">Part-time</option>
+              <option value="Contract">Contract</option>
+              <option value="Remote">Remote</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Annual Salary ($ USD)</label>
+            <input type="number" id="jobSalaryInput" class="form-control" placeholder="120000" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Requirements & Skills (comma-separated or listed)</label>
+          <input type="text" id="jobRequirementsInput" class="form-control" placeholder="Java 17, Spring Boot, MySQL, Docker" required>
+        </div>
+        <div class="form-group">
+          <label>Job Description</label>
+          <textarea id="jobDescriptionInput" class="form-control" placeholder="Detailed position overview, responsibilities..." rows="4" required></textarea>
+        </div>
+        <div class="form-group" id="jobStatusGroup" style="display:none;">
+          <label>Listing Status</label>
+          <select id="jobStatusSelect" class="form-control">
+            <option value="ACTIVE">ACTIVE</option>
+            <option value="FILLED">FILLED</option>
+            <option value="INACTIVE">INACTIVE</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-primary" style="width:100%; justify-content:center;">Save Listing</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

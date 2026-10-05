@@ -4,6 +4,7 @@ import com.company.jobportal.model.ActivityLog;
 import com.company.jobportal.repository.ActivityLogRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.company.jobportal.websocket.ActivityWebSocketHandler;
 
 import java.util.List;
 

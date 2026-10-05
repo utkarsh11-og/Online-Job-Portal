@@ -19,6 +19,6 @@ public class WebSocketConfig implements WebSocketConfigurer {
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         registry.addHandler(activityWebSocketHandler, "/ws/activity")
                 .setAllowedOrigins("*") // In production, restrict to your domain
-                .addInterceptors(new HttpSessionHandshakeInterceptor());
+                .addInterceptors(new HttpSessionHandshakeInterceptor(), new AuthenticationHandshakeInterceptor());
     }
 }

@@ -13,10 +13,16 @@ public class ActivityLogServiceImpl implements ActivityLogService {
     @Autowired
     private ActivityLogRepository activityLogRepository;
 
+    @Autowired
+    private ActivityWebSocketHandler activityWebSocketHandler;
+
     @Override
     public void logActivity(String userEmail, String userRole, String action, String details) {
         ActivityLog log = new ActivityLog(userEmail, userRole, action, details);
-        activityLogRepository.save(log);
+        ActivityLog saved = activityLogRepository.save(log);
+
+        // Broadcast to WebSocket clients
+        activityWebSocketHandler.broadcastActivity(saved);
     }
 
     @Override

@@ -18,7 +18,7 @@ import java.util.List;
 public class ActivityWebSocketHandler extends TextWebSocketHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(ActivityWebSocketHandler.class);
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper objectMapper = new ObjectMapper();
     // Thread-safe list of active sessions
     private final List<WebSocketSession> sessions = new CopyOnWriteArrayList<>();
 
@@ -42,9 +42,17 @@ public class ActivityWebSocketHandler extends TextWebSocketHandler {
             String json = objectMapper.writeValueAsString(activity);
             TextMessage message = new TextMessage(json);
 
-            for (WebSocketSession session : sessions) {
-                if (session.isOpen()) {
-                    session.sendMessage(message);
+            // Create a copy of sessions to avoid ConcurrentModificationException
+            List<WebSocketSession> sessionCopy = new CopyOnWriteArrayList<>(sessions);
+            for (WebSocketSession session : sessionCopy) {
+                try {
+                    if (session.isOpen()) {
+                        session.sendMessage(message);
+                    }
+                } catch (IOException e) {
+                    logger.error("Error sending activity to WebSocket session {}", session.getId(), e);
+                    // Remove broken session
+                    sessions.remove(session);
                 }
             }
         } catch (IOException e) {

@@ -9,6 +9,9 @@ const app = {
   currentUser: JSON.parse(localStorage.getItem('currentUser') || 'null'),
   currentChatUserId: null,
   currentChatUserRole: null,
+  activityWebSocket: null, // Add this
+  activityStompClient: null, // If using STOMP
+  activityCallbacks: [], // Callbacks for activity updates
 
   init() {
     this.updateNavAuth();
@@ -76,8 +79,122 @@ const app = {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   },
 
+  // WEBSOCKET CONNECTION METHODS
+  connectActivityWebSocket() {
+    if (!this.currentUser || this.currentUser.role !== 'ADMIN') {
+      return; // Only admins need activity feed
+    }
+
+    // Check if WebSocket is supported
+    if (!('WebSocket' in window)) {
+      console.warn('WebSocket not supported, falling back to polling');
+      this.setupActivityPolling();
+      return;
+    }
+
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws/activity`;
+
+    try {
+      this.activityWebSocket = new WebSocket(wsUrl);
+
+      this.activityWebSocket.onopen = () => {
+        console.log('Connected to activity WebSocket');
+        // Optionally send a heartbeat or initial message
+      };
+
+      this.activityWebSocket.onmessage = (event) => {
+        try {
+          const activity = JSON.parse(event.data);
+          this.handleActivityUpdate(activity);
+        } catch (e) {
+          console.error('Error parsing activity WebSocket message:', e);
+        }
+      };
+
+      this.activityWebSocket.onclose = () => {
+        console.log('Disconnected from activity WebSocket');
+        // Attempt to reconnect after delay
+        setTimeout(() => this.connectActivityWebSocket(), 5000);
+      };
+
+      this.activityWebSocket.onerror = (error) => {
+        console.error('WebSocket error:', error);
+      };
+    } catch (e) {
+      console.error('Failed to create WebSocket connection:', e);
+      // Fallback to polling will handle this case
+      this.setupActivityPolling();
+    }
+  },
+
+  disconnectActivityWebSocket() {
+    if (this.activityWebSocket) {
+      this.activityWebSocket.close();
+      this.activityWebSocket = null;
+    }
+  },
+
+  handleActivityUpdate(activity) {
+    // Add activity to feed (similar to how loadAdminActivities works)
+    // This will be called whenever a new activity arrives via WebSocket
+    const feed = document.getElementById('adminActivityFeed');
+    if (!feed) return;
+
+    const activityElement = document.createElement('div');
+    activityElement.className = 'activity-item';
+    activityElement.innerHTML = `
+      <div class="activity-icon-box">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      </div>
+      <div class="activity-content">
+        <div class="activity-title">${activity.details}</div>
+        <div class="activity-meta">
+          <span><strong>${activity.userEmail || 'System'}</strong></span>
+          ${activity.userRole ? `• <span class="role-tag ${activity.userRole.toLowerCase()}">${activity.userRole}</span>` : ''}
+          • <span>${this.formatDate(activity.timestamp)}</span>
+        </div>
+      </div>
+    `;
+
+    // Prepend to feed (newest first)
+    feed.insertBefore(activityElement, feed.firstChild);
+
+    // Limit feed to last 50 activities for performance
+    while (feed.children.length > 50) {
+      feed.removeChild(feed.lastChild);
+    }
+  },
+
+  // Fallback polling method for older browsers or when WebSocket fails
+  setupActivityPolling() {
+    // Clear any existing interval
+    if (this.activityPollingInterval) {
+      clearInterval(this.activityPollingInterval);
+    }
+
+    // Poll every 10 seconds
+    this.activityPollingInterval = setInterval(() => {
+      this.loadAdminActivities(); // This will try to reconnect WebSocket
+    }, 10000);
+  },
+
+  // Cleanup methods
+  cleanupActivityConnections() {
+    this.disconnectActivityWebSocket();
+    if (this.activityPollingInterval) {
+      clearInterval(this.activityPollingInterval);
+      this.activityPollingInterval = null;
+    }
+  },
+
   // VIEW NAVIGATION
   showView(viewName) {
+    // Clean up activity connections when leaving admin dashboard
+    if (viewName !== 'admin') {
+      this.cleanupActivityConnections();
+    }
+
     const views = ['viewJobs', 'viewAdminDashboard', 'viewEmployerDashboard', 'viewSeekerDashboard'];
     views.forEach(v => {
       const el = document.getElementById(v);
@@ -667,6 +784,10 @@ const app = {
 
   async loadAdminActivities() {
     try {
+      // Connect to WebSocket for real-time updates
+      this.connectActivityWebSocket();
+
+      // Still fetch initial activities for baseline
       const res = await this.api('/admin/activities');
       const activities = await res.json();
       const feed = document.getElementById('adminActivityFeed');
@@ -693,6 +814,8 @@ const app = {
       `).join('');
     } catch (err) {
       console.error(err);
+      // Fallback to polling if WebSocket fails
+      this.setupActivityPolling();
     }
   },
 

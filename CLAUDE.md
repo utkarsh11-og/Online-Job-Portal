@@ -2,31 +2,9 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project Overview
-This is an online job portal web application with three user types:
-- **Admin**: Manages users, job listings, and system settings
-- **Employer**: Posts job listings, manages applications, communicates with candidates
-- **Job Seeker**: Searches and applies for jobs, uploads resumes, tracks application status
+## Essential Commands
 
-## Technology Stack
-- Backend: Java 17, Spring Boot 3.x, Spring Data JPA, Hibernate
-- Database: MySQL 8.0+ or PostgreSQL 13+
-- Build Tool: Maven
-- Testing: JUnit 5, Mockito
-- Lombok for reducing boilerplate
-
-## Development Setup
-
-### Prerequisites
-- Java JDK 17+
-- Maven 3.6+
-- Git
-- IDE (IntelliJ IDEA, Eclipse, or VS Code)
-- MySQL or PostgreSQL
-
-### Common Commands
-
-#### Backend (Java)
+### Build & Run
 ```bash
 # Build the project
 mvn clean install
@@ -34,161 +12,98 @@ mvn clean install
 # Run the application
 mvn spring-boot:run
 
+# Run with hot reload (devtools)
+mvn spring-boot:run -Dspring-boot.devtools.restart.enabled=true
+
 # Run tests
 mvn test
 
-# Run a specific test
+# Run specific test
 mvn test -Dtest=TestClassName
 
-# Start in development mode with hot reload
-mvn spring-boot:run -Dspring-boot.devtools.restart.enabled=true
+# Database (H2 is default for dev)
+# Access H2 console at http://localhost:8080/h2-console
+# JDBC URL: jdbc:h2:mem:jobportal
 ```
 
-#### Database
-```bash
-# Initialize database (if using migration scripts)
-# Example for Flyway:
-mvn flyway:migrate
+### Project Structure
+```
+src/main/java/com/company/jobportal/
+├── controller/    # REST controllers (/api/* endpoints)
+├── service/       # Business logic interfaces & implementations
+├── repository/    # Spring Data JPA repositories
+├── model/         # JPA entities (User, JobListing, Application, etc.)
+├── dto/           # Data transfer objects
+└── config/        # Spring configuration (Security, WebSocket, etc.)
 
-# Reset database
-mvn flyway:clean
-mvn flyway:migrate
+src/main/resources/
+├── application.properties    # Main configuration (H2 DB, JWT, file upload)
+└── static/                   # Static assets (CSS, JS, HTML)
 ```
 
-## Project Structure
-```
-src/
-├── main/
-│   ├── java/
-│   │   └── com/
-│   │       └── company/
-│   │           └── jobportal/
-│   │               ├── controller/     # REST controllers
-│   │               ├── service/        # Business logic
-│   │               ├── repository/     # Data access layer
-│   │               ├── model/          # Entity classes
-│   │               ├── dto/            # Data transfer objects
-│   │               └── config/         # Configuration classes
-│   └── resources/
-│       ├── application.properties      # Configuration
-│       ├── static/                     # Static assets (CSS, JS, images)
-│       └── templates/                  # View templates (if using server-side rendering)
-└── test/
-    └── java/
-        └── com/
-            └── company/
-                └── jobportal/
-                    ├── controller/     # Controller tests
-                    ├── service/        # Service tests
-                    └── repository/     # Repository tests
-```
+## Key Features
 
-## Key Features to Implement
+### Three User Types
+- **Admin**: User management, job approval, system settings
+- **Employer**: Job posting, application management, candidate communication
+- **Job Seeker**: Job search/resume upload, application tracking, profile
 
-### Admin Functionality
-- User management (CRUD operations)
-- Job listing approval/rejection
-- System settings management
-- Dashboard with statistics and monitoring
+### Core API Endpoints
+- Auth: `/api/auth/{register,login}`
+- Users: `/api/users/{id}`
+- Jobs: `/api/jobs/{id}` + `/api/jobs/{id}/applications`
+- Applications: `/api/applications/{id}`
+- Messages: `/api/messages/{id}` (WebSocket-backed messaging)
+- System Settings: `/api/system-settings/*`
 
-### Employer Functionality
-- Job posting creation and management
-- Application review and management
-- Candidate communication
-- Job posting history and analytics
-
-### Job Seeker Functionality
-- Job search and filtering
-- Job application with resume/cover letter
-- Application tracking
-- Profile management
-- Job recommendations
-
-## API Endpoints (Typical)
-```
-# Auth
-POST /api/auth/login
-POST /api/auth/logout
-
-# Users
-GET /api/users
-POST /api/users
-GET /api/users/{id}
-PUT /api/users/{id}
-DELETE /api/users/{id}
-
-# Jobs
-GET /api/jobs
-POST /api/jobs
-GET /api/jobs/{id}
-PUT /api/jobs/{id}
-DELETE /api/jobs/{id}
-GET /api/jobs/{id}/applications
-
-# Applications
-GET /api/applications
-POST /api/applications
-GET /api/applications/{id}
-PUT /api/applications/{id}
-```
+### Technology Stack
+- **Backend**: Java 26, Spring Boot 4.1.1, Spring Data JPA, Hibernate
+- **Security**: JWT authentication, Spring Security
+- **Real-time**: WebSocket for activity monitoring and messaging
+- **Build**: Maven
+- **Testing**: JUnit 5, Mockito
+- **Database**: H2 (dev), MySQL/PostgreSQL (prod)
 
 ## Development Guidelines
-1. Follow REST API design principles
-2. Use appropriate HTTP status codes
-3. Implement proper validation and error handling
-4. Write unit tests for service and controller layers
-5. Keep controllers thin; move business logic to services
-6. Use DTOs to avoid exposing internal entities
-7. Secure endpoints with appropriate authentication/authorization
-8. Follow Java naming conventions and code style
-9. Document complex logic with comments
-10. Use meaningful commit messages
 
-## Database Design (Typical Tables)
-- users (id, name, email, password, role, created_at, updated_at)
-- job_listings (id, title, description, requirements, salary, employer_id, status, created_at, updated_at)
-- applications (id, job_seeker_id, job_listing_id, resume, cover_letter, status, applied_at, updated_at)
-- user_sessions (for tracking active sessions)
-- system_settings (key, value, description)
+1. **API Design**: RESTful with proper HTTP status codes
+2. **Validation**: Use javax.validation on DTOs
+3. **Security**: All endpoints require authentication except auth/register/login
+4. **DTO Pattern**: Use DTOs to decouple API from entities
+5. **Service Layer**: Keep controllers thin; business logic in services
+6. **Error Handling**: Global exception handling via @ControllerAdvice
+7. **Lombok**: Use @Data, @NoArgsConstructor, etc. to reduce boilerplate
+8. **Testing**: Write unit tests for service/controller layers
+9. **WebSocket**: Use configured endpoints (/ws/activity) with proper interceptors
 
-## Environment Configuration
-Create `application.properties` or `application.yml` in `src/main/resources/`:
-```properties
-# Database
-spring.datasource.url=jdbc:mysql://localhost:3306/jobportal
-spring.datasource.username=root
-spring.datasource.password=password
+## Documentation & Planning
 
-# Server
-server.port=8080
+- Detailed feature plans and specifications are available in `docs/superpowers/plans/`
+- Recent implementation notes:
+  - Real-time activity monitoring via WebSocket (see WebSocketConfig.java)
+  - Enhanced user engagement metrics tracking
+  - Complete job portal feature set as outlined in planning documents
 
-# JWT (if using token-based auth)
-jwt.secret=your-secret-key
-jwt.expiration=86400000
+## Common Development Tasks
 
-# File upload
-upload.path=/var/uploads
-max.file.size=10MB
-```
+### Adding a New Feature
+1. Update `application.properties` if new configuration needed
+2. Create/update DTOs in `dto/` package for data transfer
+3. Implement service logic in `service/` package
+4. Create repository interface in `repository/` if database access needed
+5. Add controller endpoints in `controller/` package
+6. Update WebSocket configuration if real-time features needed
+7. Add corresponding tests
 
-## Testing Strategy
-- **Unit Tests**: Test individual methods in isolation
-- **Integration Tests**: Test API endpoints and database interactions
-- **Mock External Services**: Use Mockito for mocking dependencies
-- **Test Data**: Use factory methods or builders for test data
-- **Continuous Integration**: Run tests on every push
+### Database Changes
+1. Modify JPA entities in `model/` package
+2. Create/update repository methods
+3. Ensure corresponding service methods handle new fields
+4. Update DTOs if API contract changes
+5. Migration note: H2 is used for dev; production uses MySQL/PostgreSQL with similar schema
 
-## Deployment
-1. Build JAR/WAR: `mvn clean package`
-2. Deploy to server (Tomcat, Jetty, or cloud platform)
-3. Configure environment variables for production
-4. Set up database backups and monitoring
-5. Configure SSL/HTTPS for production
-
-## Troubleshooting
-- **Port already in use**: Change server.port or stop existing process
-- **Database connection failed**: Check DB URL, credentials, and DB server status
-- **Missing dependencies**: Run `mvn clean install` to download dependencies
-- **OutOfMemoryError**: Increase JVM heap size with `-Xmx` flag
-- **404 Errors**: Check URL mappings and controller annotations
-- **500 Errors**: Check application logs for stack traces
+### WebSocket Integration
+1. Implement handler extending `TextWebSocketHandler` or use existing `ActivityWebSocketHandler`
+2. Register handler in `WebSocketConfig.java`
+3. Add interceptors for authentication/session handling as needed
+4. Use `SimpMessagingTemplate` or `WebSocketSession` for broadcasting messages

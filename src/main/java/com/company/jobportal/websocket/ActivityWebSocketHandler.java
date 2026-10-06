@@ -18,9 +18,17 @@ import java.util.List;
 public class ActivityWebSocketHandler extends TextWebSocketHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(ActivityWebSocketHandler.class);
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
     // Thread-safe list of active sessions
     private final List<WebSocketSession> sessions = new CopyOnWriteArrayList<>();
+
+    public ActivityWebSocketHandler(@org.springframework.beans.factory.annotation.Autowired(required = false) ObjectMapper objectMapper) {
+        if (objectMapper != null) {
+            this.objectMapper = objectMapper;
+        } else {
+            this.objectMapper = new ObjectMapper().registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
+        }
+    }
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {

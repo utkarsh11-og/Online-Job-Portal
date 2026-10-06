@@ -117,6 +117,9 @@ public class UserController {
                     if (userDetails.getResumeUrl() != null) {
                         user.setResumeUrl(userDetails.getResumeUrl());
                     }
+                    if (userDetails.getPhone() != null) {
+                        user.setPhone(userDetails.getPhone());
+                    }
                     User updatedUser = userService.updateUser(user);
                     return ResponseEntity.ok(updatedUser);
                 })

@@ -2,8 +2,10 @@ package com.company.jobportal.websocket;
 
 import com.company.jobportal.model.ActivityLog;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -22,11 +24,11 @@ public class ActivityWebSocketHandler extends TextWebSocketHandler {
     // Thread-safe list of active sessions
     private final List<WebSocketSession> sessions = new CopyOnWriteArrayList<>();
 
-    public ActivityWebSocketHandler(@org.springframework.beans.factory.annotation.Autowired(required = false) ObjectMapper objectMapper) {
+    public ActivityWebSocketHandler(@Autowired(required = false) ObjectMapper objectMapper) {
         if (objectMapper != null) {
             this.objectMapper = objectMapper;
         } else {
-            this.objectMapper = new ObjectMapper().registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
+            this.objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
         }
     }
 

@@ -663,7 +663,10 @@ const app = {
           </td>
           <td style="color:var(--text-muted); font-size:0.85rem;">${this.formatDate(u.createdAt)}</td>
           <td>
-            <button class="btn-danger" onclick="app.deleteUser(${u.id})">Delete</button>
+            <div style="display:flex; gap:0.4rem;">
+              <button class="btn-secondary" style="padding:0.35rem 0.65rem;" onclick="app.openEditUserModal(${u.id})">Edit</button>
+              <button class="btn-danger" style="padding:0.35rem 0.65rem;" onclick="app.deleteUser(${u.id})">Delete</button>
+            </div>
           </td>
         </tr>
       `).join('');
@@ -687,7 +690,98 @@ const app = {
   },
 
   openAddUserModal() {
-    this.openAuthModal('register');
+    document.getElementById('adminCreateUserName').value = '';
+    document.getElementById('adminCreateUserEmail').value = '';
+    document.getElementById('adminCreateUserRole').value = 'JOB_SEEKER';
+    document.getElementById('adminCreateUserPassword').value = '';
+    document.getElementById('adminCreateUserHeadline').value = '';
+    document.getElementById('adminCreateUserPhone').value = '';
+    document.getElementById('adminUserCreateModal').classList.add('show');
+  },
+
+  async submitAdminUserCreate(e) {
+    e.preventDefault();
+    const name = document.getElementById('adminCreateUserName').value;
+    const email = document.getElementById('adminCreateUserEmail').value;
+    const role = document.getElementById('adminCreateUserRole').value;
+    const password = document.getElementById('adminCreateUserPassword').value;
+    const headline = document.getElementById('adminCreateUserHeadline').value;
+    const phone = document.getElementById('adminCreateUserPhone').value;
+
+    try {
+      const res = await this.api('/admin/users', {
+        method: 'POST',
+        body: JSON.stringify({ name, email, role, password, headline, phone })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        this.closeModals();
+        this.showToast(data.message || 'User created successfully', 'success');
+        this.loadAdminUsers();
+        this.loadAdminStats();
+      } else {
+        this.showToast(data.error || 'Failed to create user', 'error');
+      }
+    } catch (err) {
+      this.showToast('Error creating user account', 'error');
+    }
+  },
+
+  async openEditUserModal(id) {
+    try {
+      const res = await this.api(`/admin/users/${id}`);
+      if (!res.ok) {
+        this.showToast('Could not load user data', 'error');
+        return;
+      }
+      const user = await res.json();
+      document.getElementById('adminEditUserId').value = user.id;
+      document.getElementById('adminEditUserName').value = user.name || '';
+      document.getElementById('adminEditUserEmail').value = user.email || '';
+      document.getElementById('adminEditUserRole').value = user.role || 'JOB_SEEKER';
+      document.getElementById('adminEditUserPassword').value = '';
+      document.getElementById('adminEditUserHeadline').value = user.headline || '';
+      document.getElementById('adminEditUserPhone').value = user.phone || '';
+      document.getElementById('adminEditUserSkills').value = user.skills || '';
+      document.getElementById('adminUserEditModal').classList.add('show');
+    } catch (err) {
+      this.showToast('Error loading user details', 'error');
+    }
+  },
+
+  async submitAdminUserUpdate(e) {
+    e.preventDefault();
+    const id = document.getElementById('adminEditUserId').value;
+    const name = document.getElementById('adminEditUserName').value;
+    const email = document.getElementById('adminEditUserEmail').value;
+    const role = document.getElementById('adminEditUserRole').value;
+    const password = document.getElementById('adminEditUserPassword').value;
+    const headline = document.getElementById('adminEditUserHeadline').value;
+    const phone = document.getElementById('adminEditUserPhone').value;
+    const skills = document.getElementById('adminEditUserSkills').value;
+
+    const payload = { name, email, role, headline, phone, skills };
+    if (password && password.trim().length > 0) {
+      payload.password = password.trim();
+    }
+
+    try {
+      const res = await this.api(`/admin/users/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (res.ok) {
+        this.closeModals();
+        this.showToast(data.message || 'User updated successfully', 'success');
+        this.loadAdminUsers();
+        this.loadAdminStats();
+      } else {
+        this.showToast(data.error || 'Failed to update user', 'error');
+      }
+    } catch (err) {
+      this.showToast('Error updating user', 'error');
+    }
   },
 
   async loadAdminApprovals() {

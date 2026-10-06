@@ -640,6 +640,99 @@
     </div>
   </div>
 
+  <!-- MODAL: ADMIN CREATE USER -->
+  <div class="modal-backdrop" id="adminUserCreateModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="panel-title">Create User Account</h3>
+        <button class="modal-close" onclick="app.closeModals()">&times;</button>
+      </div>
+      <form onsubmit="app.submitAdminUserCreate(event)">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="adminCreateUserName" class="form-control" placeholder="e.g. Jane Doe" required>
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="adminCreateUserEmail" class="form-control" placeholder="jane.doe@example.com" required>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.75rem;">
+          <div class="form-group">
+            <label>Assigned Role</label>
+            <select id="adminCreateUserRole" class="form-control" required>
+              <option value="JOB_SEEKER">Job Seeker</option>
+              <option value="EMPLOYER">Employer</option>
+              <option value="ADMIN">Administrator</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Initial Password</label>
+            <input type="password" id="adminCreateUserPassword" class="form-control" placeholder="Min 6 characters" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Headline / Company Name (Optional)</label>
+          <input type="text" id="adminCreateUserHeadline" class="form-control" placeholder="e.g. Lead Cloud Architect / TechCorp Inc">
+        </div>
+        <div class="form-group">
+          <label>Phone Number (Optional)</label>
+          <input type="text" id="adminCreateUserPhone" class="form-control" placeholder="+1-555-0199">
+        </div>
+        <button type="submit" class="btn-primary" style="width:100%; justify-content:center;">Create User Account</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: ADMIN EDIT USER -->
+  <div class="modal-backdrop" id="adminUserEditModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="panel-title">Edit User Account</h3>
+        <button class="modal-close" onclick="app.closeModals()">&times;</button>
+      </div>
+      <form onsubmit="app.submitAdminUserUpdate(event)">
+        <input type="hidden" id="adminEditUserId">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="adminEditUserName" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="adminEditUserEmail" class="form-control" required>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.75rem;">
+          <div class="form-group">
+            <label>User Role</label>
+            <select id="adminEditUserRole" class="form-control" required>
+              <option value="JOB_SEEKER">Job Seeker</option>
+              <option value="EMPLOYER">Employer</option>
+              <option value="ADMIN">Administrator</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Password (leave blank to keep current)</label>
+            <input type="password" id="adminEditUserPassword" class="form-control" placeholder="Optional new password">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Headline / Company</label>
+          <input type="text" id="adminEditUserHeadline" class="form-control" placeholder="e.g. Senior Backend Engineer">
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.75rem;">
+          <div class="form-group">
+            <label>Phone Number</label>
+            <input type="text" id="adminEditUserPhone" class="form-control" placeholder="+1-555-0199">
+          </div>
+          <div class="form-group">
+            <label>Skills (comma-separated)</label>
+            <input type="text" id="adminEditUserSkills" class="form-control" placeholder="Java, Spring Boot, React">
+          </div>
+        </div>
+        <button type="submit" class="btn-primary" style="width:100%; justify-content:center;">Save User Changes</button>
+      </form>
+    </div>
+  </div>
+
   <!-- Toast Notification Container -->
   <div class="toast-container" id="toastContainer"></div>
 

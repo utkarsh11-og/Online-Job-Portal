@@ -1,14 +1,19 @@
 package com.company.jobportal.service;
 
+import com.company.jobportal.model.ActivityLog;
 import com.company.jobportal.model.Application;
 import com.company.jobportal.model.JobListing;
+import com.company.jobportal.repository.ActivityLogRepository;
 import com.company.jobportal.repository.ApplicationRepository;
 import com.company.jobportal.repository.JobListingRepository;
 import com.company.jobportal.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -25,6 +30,9 @@ public class DashboardStatsServiceImpl implements DashboardStatsService {
     @Autowired
     private ApplicationRepository applicationRepository;
 
+    @Autowired
+    private ActivityLogRepository activityLogRepository;
+
     @Override
     public Map<String, Object> getAdminStats() {
         Map<String, Object> stats = new HashMap<>();
@@ -34,6 +42,43 @@ public class DashboardStatsServiceImpl implements DashboardStatsService {
         stats.put("totalEmployers", userRepository.countByRole("EMPLOYER"));
         stats.put("totalJobSeekers", userRepository.countByRole("JOB_SEEKER"));
         stats.put("totalAdmins", userRepository.countByRole("ADMIN"));
+
+        // User Engagement Metrics
+        LocalDateTime oneDayAgo = LocalDateTime.now().minusHours(24);
+        LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
+        LocalDateTime todayStart = LocalDate.now().atStartOfDay();
+
+        long dau = activityLogRepository.countDistinctActiveUsersSince(oneDayAgo);
+        long wau = activityLogRepository.countDistinctActiveUsersSince(sevenDaysAgo);
+        long activitiesToday = activityLogRepository.countActivitiesSince(todayStart);
+
+        stats.put("dailyActiveUsers", dau);
+        stats.put("weeklyActiveUsers", wau);
+        stats.put("activitiesToday", activitiesToday);
+
+        // Recent 7-day activity logs & breakdown
+        List<ActivityLog> recentLogs = activityLogRepository.findByTimestampAfterOrderByTimestampDesc(sevenDaysAgo);
+        Map<String, Long> actionBreakdown = recentLogs.stream()
+                .filter(log -> log.getAction() != null)
+                .collect(Collectors.groupingBy(ActivityLog::getAction, Collectors.counting()));
+        stats.put("actionBreakdown", actionBreakdown);
+
+        // Activity trends per day (last 7 days)
+        Map<String, Long> activityTrends = new LinkedHashMap<>();
+        LocalDate today = LocalDate.now();
+        for (int i = 6; i >= 0; i--) {
+            LocalDate d = today.minusDays(i);
+            activityTrends.put(d.toString(), 0L);
+        }
+        for (ActivityLog log : recentLogs) {
+            if (log.getTimestamp() != null) {
+                String d = log.getTimestamp().toLocalDate().toString();
+                if (activityTrends.containsKey(d)) {
+                    activityTrends.put(d, activityTrends.get(d) + 1);
+                }
+            }
+        }
+        stats.put("activityTrends", activityTrends);
 
         // Job stats
         stats.put("totalJobs", jobListingRepository.count());

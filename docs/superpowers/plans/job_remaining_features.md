@@ -137,14 +137,14 @@ graph TD
   - [x] Add `adminUserEditModal` and `adminUserCreateModal` in `index.html`
   - [x] Add Edit button and edit/create handlers in `app.js`
   - [x] Verify Admin can edit user role/details and create users with direct roles
-- [ ] **Task 2**: User Engagement Metrics
-  - [ ] Add activity query methods to `ActivityLogRepository`
-  - [ ] Update `DashboardStatsService` to compute DAU, WAU, and activity breakdowns
-  - [ ] Display engagement KPIs in the Admin Dashboard
-- [ ] **Task 3**: Interactive Statistics Visualizations
-  - [ ] Include Chart.js in `index.html`
-  - [ ] Render interactive charts in Admin Dashboard (`adminStatsCharts`)
-  - [ ] Render interactive charts in Employer Dashboard (`employerAnalyticsCharts`)
+- [x] **Task 2**: User Engagement Metrics
+  - [x] Add activity query methods to `ActivityLogRepository`
+  - [x] Update `DashboardStatsService` to compute DAU, WAU, and activity breakdowns
+  - [x] Display engagement KPIs in the Admin Dashboard
+- [x] **Task 3**: Interactive Statistics Visualizations
+  - [x] Include Chart.js in `index.html`
+  - [x] Render interactive charts in Admin Dashboard (`adminStatsCharts`)
+  - [x] Render interactive charts in Employer Dashboard (`employerAnalyticsCharts`)
 - [ ] **Task 4**: Automated Test Suite
   - [ ] Implement service unit tests (`UserServiceTest`, `JobListingServiceTest`, `ApplicationServiceTest`, `DashboardStatsServiceTest`)
   - [ ] Implement controller tests (`AuthControllerTest`, `JobListingControllerTest`, `AdminControllerTest`)

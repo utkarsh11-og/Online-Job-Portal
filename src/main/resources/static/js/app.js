@@ -79,6 +79,30 @@ const app = {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   },
 
+  initChartDefaults() {
+    if (typeof Chart === 'undefined') return;
+    Chart.defaults.color = '#94a3b8';
+    Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.08)';
+    Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+    if (Chart.defaults.plugins && Chart.defaults.plugins.legend) {
+      Chart.defaults.plugins.legend.labels.usePointStyle = true;
+      Chart.defaults.plugins.legend.labels.boxWidth = 8;
+    }
+  },
+
+  renderChart(canvasId, config) {
+    if (typeof Chart === 'undefined') return null;
+    this.initChartDefaults();
+    this.charts = this.charts || {};
+    if (this.charts[canvasId]) {
+      this.charts[canvasId].destroy();
+    }
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return null;
+    this.charts[canvasId] = new Chart(canvas, config);
+    return this.charts[canvasId];
+  },
+
   // WEBSOCKET CONNECTION METHODS
   connectActivityWebSocket() {
     if (!this.currentUser || this.currentUser.role !== 'ADMIN') {
@@ -566,6 +590,7 @@ const app = {
 
     if (tabName === 'approvals') this.loadAdminApprovals();
     if (tabName === 'activities') this.loadAdminActivities();
+    if (tabName === 'stats') this.loadAdminStats();
   },
 
   async loadAdminStats() {
@@ -579,6 +604,11 @@ const app = {
           <div class="stat-label">Total Users</div>
           <div class="stat-value">${stats.totalUsers || 0}</div>
           <div class="stat-subtext">${stats.totalJobSeekers || 0} Candidates • ${stats.totalEmployers || 0} Employers</div>
+        </div>
+        <div class="stat-card cyan">
+          <div class="stat-label">Daily Active Users</div>
+          <div class="stat-value">${stats.dailyActiveUsers || 0}</div>
+          <div class="stat-subtext">${stats.weeklyActiveUsers || 0} active this week (WAU)</div>
         </div>
         <div class="stat-card purple">
           <div class="stat-label">Active Job Postings</div>
@@ -595,52 +625,191 @@ const app = {
           <div class="stat-value">${stats.totalApplications || 0}</div>
           <div class="stat-subtext">${stats.shortlistedApplications || 0} Shortlisted • ${stats.acceptedApplications || 0} Accepted</div>
         </div>
+        <div class="stat-card">
+          <div class="stat-label">Activities Today</div>
+          <div class="stat-value">${stats.activitiesToday || 0}</div>
+          <div class="stat-subtext">Real-time system events logged</div>
+        </div>
       `;
 
       document.getElementById('adminPendingBadge').innerText = stats.pendingJobs || 0;
 
-      // Render Admin visual breakdown charts
+      // Render Admin Visual Breakdown & Chart.js Charts
       const chartsContainer = document.getElementById('adminStatsCharts');
-      const totalApps = stats.totalApplications || 1;
-      const totalJobs = stats.totalJobs || 1;
-
       chartsContainer.innerHTML = `
-        <div>
-          <h4 style="font-weight:700; margin-bottom:1rem;">Application Funnel Distribution</h4>
-          <div class="chart-bar-container">
-            <div class="chart-bar-header"><span>Pending Review</span><span>${stats.pendingApplications || 0} (${Math.round(((stats.pendingApplications || 0)/totalApps)*100)}%)</span></div>
-            <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${Math.min(100, Math.round(((stats.pendingApplications || 0)/totalApps)*100))}%; background:#fbbf24;"></div></div>
-          </div>
-          <div class="chart-bar-container">
-            <div class="chart-bar-header"><span>Shortlisted</span><span>${stats.shortlistedApplications || 0} (${Math.round(((stats.shortlistedApplications || 0)/totalApps)*100)}%)</span></div>
-            <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${Math.min(100, Math.round(((stats.shortlistedApplications || 0)/totalApps)*100))}%; background:#60a5fa;"></div></div>
-          </div>
-          <div class="chart-bar-container">
-            <div class="chart-bar-header"><span>Accepted / Hired</span><span>${stats.acceptedApplications || 0} (${Math.round(((stats.acceptedApplications || 0)/totalApps)*100)}%)</span></div>
-            <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${Math.min(100, Math.round(((stats.acceptedApplications || 0)/totalApps)*100))}%; background:#34d399;"></div></div>
-          </div>
-          <div class="chart-bar-container">
-            <div class="chart-bar-header"><span>Rejected</span><span>${stats.rejectedApplications || 0} (${Math.round(((stats.rejectedApplications || 0)/totalApps)*100)}%)</span></div>
-            <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${Math.min(100, Math.round(((stats.rejectedApplications || 0)/totalApps)*100))}%; background:#fb7185;"></div></div>
+        <div class="chart-card">
+          <h4>7-Day Platform Activity Trends</h4>
+          <p>Real-time activity volume and engagement across the last 7 days</p>
+          <div class="chart-wrapper">
+            <canvas id="adminActivityTrendsChart"></canvas>
           </div>
         </div>
 
-        <div>
-          <h4 style="font-weight:700; margin-bottom:1rem;">Job Approval Metrics</h4>
-          <div class="chart-bar-container">
-            <div class="chart-bar-header"><span>Approved & Published</span><span>${stats.approvedJobs || 0}</span></div>
-            <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${Math.min(100, Math.round(((stats.approvedJobs || 0)/totalJobs)*100))}%; background:#34d399;"></div></div>
+        <div class="chart-card">
+          <h4>Application Funnel Distribution</h4>
+          <p>Candidate pipeline across review, shortlist, and hiring stages</p>
+          <div class="chart-wrapper">
+            <canvas id="adminAppStatusChart"></canvas>
           </div>
-          <div class="chart-bar-container">
-            <div class="chart-bar-header"><span>Pending Moderation</span><span>${stats.pendingJobs || 0}</span></div>
-            <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${Math.min(100, Math.round(((stats.pendingJobs || 0)/totalJobs)*100))}%; background:#fbbf24;"></div></div>
+        </div>
+
+        <div class="chart-card">
+          <h4>System Events & Engagement Breakdown</h4>
+          <p>Distribution of user actions and administrative operations</p>
+          <div class="chart-wrapper">
+            <canvas id="adminActionBreakdownChart"></canvas>
           </div>
-          <div class="chart-bar-container">
-            <div class="chart-bar-header"><span>Rejected Postings</span><span>${stats.rejectedJobs || 0}</span></div>
-            <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${Math.min(100, Math.round(((stats.rejectedJobs || 0)/totalJobs)*100))}%; background:#fb7185;"></div></div>
+        </div>
+
+        <div class="chart-card">
+          <h4>Job Moderation Status</h4>
+          <p>Status of employer job postings submitted for review</p>
+          <div class="chart-wrapper">
+            <canvas id="adminJobStatusChart"></canvas>
           </div>
         </div>
       `;
+
+      // 1. Activity Trends Line Chart
+      const trendLabels = Object.keys(stats.activityTrends || {}).map(d => {
+        const parts = d.split('-');
+        return parts.length === 3 ? `${parts[1]}/${parts[2]}` : d;
+      });
+      const trendValues = Object.values(stats.activityTrends || {});
+
+      this.renderChart('adminActivityTrendsChart', {
+        type: 'line',
+        data: {
+          labels: trendLabels,
+          datasets: [{
+            label: 'Activities',
+            data: trendValues,
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.15)',
+            borderWidth: 2,
+            tension: 0.35,
+            fill: true,
+            pointBackgroundColor: '#60a5fa',
+            pointRadius: 4,
+            pointHoverRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { precision: 0 },
+              grid: { color: 'rgba(255, 255, 255, 0.05)' }
+            },
+            x: {
+              grid: { display: false }
+            }
+          }
+        }
+      });
+
+      // 2. Application Status Doughnut Chart
+      const appCounts = [
+        stats.pendingApplications || 0,
+        stats.shortlistedApplications || 0,
+        stats.acceptedApplications || 0,
+        stats.rejectedApplications || 0
+      ];
+      this.renderChart('adminAppStatusChart', {
+        type: 'doughnut',
+        data: {
+          labels: ['Pending Review', 'Shortlisted', 'Accepted / Hired', 'Rejected'],
+          datasets: [{
+            data: appCounts,
+            backgroundColor: ['#f59e0b', '#3b82f6', '#10b981', '#f43f5e'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '68%',
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: { padding: 16 }
+            }
+          }
+        }
+      });
+
+      // 3. Action Breakdown Horizontal Bar Chart
+      const breakdownEntries = Object.entries(stats.actionBreakdown || {});
+      const actionLabels = breakdownEntries.map(([k]) => k.replace(/_/g, ' '));
+      const actionValues = breakdownEntries.map(([, v]) => v);
+
+      this.renderChart('adminActionBreakdownChart', {
+        type: 'bar',
+        data: {
+          labels: actionLabels.length ? actionLabels : ['No recent activity'],
+          datasets: [{
+            label: 'Actions',
+            data: actionValues.length ? actionValues : [0],
+            backgroundColor: '#06b6d4',
+            borderRadius: 6
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            x: {
+              beginAtZero: true,
+              ticks: { precision: 0 },
+              grid: { color: 'rgba(255, 255, 255, 0.05)' }
+            },
+            y: {
+              grid: { display: false }
+            }
+          }
+        }
+      });
+
+      // 4. Job Moderation Status Bar Chart
+      this.renderChart('adminJobStatusChart', {
+        type: 'bar',
+        data: {
+          labels: ['Approved', 'Pending', 'Rejected'],
+          datasets: [{
+            label: 'Jobs',
+            data: [stats.approvedJobs || 0, stats.pendingJobs || 0, stats.rejectedJobs || 0],
+            backgroundColor: ['#10b981', '#f59e0b', '#f43f5e'],
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { precision: 0 },
+              grid: { color: 'rgba(255, 255, 255, 0.05)' }
+            },
+            x: {
+              grid: { display: false }
+            }
+          }
+        }
+      });
+
     } catch (err) {
       console.error(err);
     }
@@ -939,6 +1108,7 @@ const app = {
     if (btn) btn.classList.add('active');
 
     if (tabName === 'messages') this.loadEmployerContacts();
+    if (tabName === 'analytics') this.loadEmployerStats();
   },
 
   async loadEmployerStats() {
@@ -974,39 +1144,91 @@ const app = {
 
       // Employer Analytics Charts
       const charts = document.getElementById('employerAnalyticsCharts');
-      const totalApps = stats.totalApplications || 1;
-
       charts.innerHTML = `
-        <div>
-          <h4 style="font-weight:700; margin-bottom:1rem;">Applicant Status Funnel</h4>
-          <div class="chart-bar-container">
-            <div class="chart-bar-header"><span>Under Review</span><span>${stats.pendingReview || 0}</span></div>
-            <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${Math.round(((stats.pendingReview||0)/totalApps)*100)}%; background:#fbbf24;"></div></div>
-          </div>
-          <div class="chart-bar-container">
-            <div class="chart-bar-header"><span>Shortlisted</span><span>${stats.shortlisted || 0}</span></div>
-            <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${Math.round(((stats.shortlisted||0)/totalApps)*100)}%; background:#60a5fa;"></div></div>
-          </div>
-          <div class="chart-bar-container">
-            <div class="chart-bar-header"><span>Accepted / Hired</span><span>${stats.accepted || 0}</span></div>
-            <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${Math.round(((stats.accepted||0)/totalApps)*100)}%; background:#34d399;"></div></div>
-          </div>
-          <div class="chart-bar-container">
-            <div class="chart-bar-header"><span>Declined</span><span>${stats.rejected || 0}</span></div>
-            <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${Math.round(((stats.rejected||0)/totalApps)*100)}%; background:#fb7185;"></div></div>
+        <div class="chart-card">
+          <h4>Applicant Status Funnel</h4>
+          <p>Distribution of candidate applications across review stages</p>
+          <div class="chart-wrapper">
+            <canvas id="employerStatusFunnelChart"></canvas>
           </div>
         </div>
 
-        <div>
-          <h4 style="font-weight:700; margin-bottom:1rem;">Applications by Position</h4>
-          ${Object.entries(stats.applicantsPerJob || {}).map(([title, count]) => `
-            <div class="chart-bar-container">
-              <div class="chart-bar-header"><span>${title}</span><span>${count} candidate(s)</span></div>
-              <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${Math.min(100, count * 20)}%;"></div></div>
-            </div>
-          `).join('') || '<p style="color:var(--text-muted);">No applications received yet.</p>'}
+        <div class="chart-card">
+          <h4>Applications Received by Job Posting</h4>
+          <p>Candidate volume received per active or published job</p>
+          <div class="chart-wrapper">
+            <canvas id="employerJobsBreakdownChart"></canvas>
+          </div>
         </div>
       `;
+
+      // 1. Candidate Status Funnel Doughnut Chart
+      const empStatusCounts = [
+        stats.pendingReview || 0,
+        stats.shortlisted || 0,
+        stats.accepted || 0,
+        stats.rejected || 0
+      ];
+
+      this.renderChart('employerStatusFunnelChart', {
+        type: 'doughnut',
+        data: {
+          labels: ['Under Review', 'Shortlisted', 'Hired / Accepted', 'Declined'],
+          datasets: [{
+            data: empStatusCounts,
+            backgroundColor: ['#f59e0b', '#3b82f6', '#10b981', '#f43f5e'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '68%',
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: { padding: 16 }
+            }
+          }
+        }
+      });
+
+      // 2. Applications by Position Bar Chart
+      const applicantsPerJob = stats.applicantsPerJob || {};
+      const jobTitles = Object.keys(applicantsPerJob);
+      const applicantCounts = Object.values(applicantsPerJob);
+
+      this.renderChart('employerJobsBreakdownChart', {
+        type: 'bar',
+        data: {
+          labels: jobTitles.length ? jobTitles : ['No applications yet'],
+          datasets: [{
+            label: 'Applicants',
+            data: applicantCounts.length ? applicantCounts : [0],
+            backgroundColor: '#8b5cf6',
+            borderRadius: 6
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            x: {
+              beginAtZero: true,
+              ticks: { precision: 0 },
+              grid: { color: 'rgba(255, 255, 255, 0.05)' }
+            },
+            y: {
+              grid: { display: false }
+            }
+          }
+        }
+      });
+
     } catch (err) {
       console.error(err);
     }

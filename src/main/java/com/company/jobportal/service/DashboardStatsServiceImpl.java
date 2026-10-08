@@ -7,7 +7,6 @@ import com.company.jobportal.repository.ActivityLogRepository;
 import com.company.jobportal.repository.ApplicationRepository;
 import com.company.jobportal.repository.JobListingRepository;
 import com.company.jobportal.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -20,18 +19,20 @@ import java.util.stream.Collectors;
 
 @Service
 public class DashboardStatsServiceImpl implements DashboardStatsService {
+    private final UserRepository userRepository;
+    private final JobListingRepository jobListingRepository;
+    private final ApplicationRepository applicationRepository;
+    private final ActivityLogRepository activityLogRepository;
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private JobListingRepository jobListingRepository;
-
-    @Autowired
-    private ApplicationRepository applicationRepository;
-
-    @Autowired
-    private ActivityLogRepository activityLogRepository;
+    public DashboardStatsServiceImpl(UserRepository userRepository,
+                                     JobListingRepository jobListingRepository,
+                                     ApplicationRepository applicationRepository,
+                                     ActivityLogRepository activityLogRepository) {
+        this.userRepository = userRepository;
+        this.jobListingRepository = jobListingRepository;
+        this.applicationRepository = applicationRepository;
+        this.activityLogRepository = activityLogRepository;
+    }
 
     @Override
     public Map<String, Object> getAdminStats() {
@@ -60,7 +61,7 @@ public class DashboardStatsServiceImpl implements DashboardStatsService {
         List<ActivityLog> recentLogs = activityLogRepository.findByTimestampAfterOrderByTimestampDesc(sevenDaysAgo);
         Map<String, Long> actionBreakdown = recentLogs.stream()
                 .filter(log -> log.getAction() != null)
-                .collect(Collectors.groupingBy(ActivityLog::getAction, Collectors.counting()));
+                .collect(Collectors.groupingBy(log -> log.getAction(), Collectors.counting()));
         stats.put("actionBreakdown", actionBreakdown);
 
         // Activity trends per day (last 7 days)

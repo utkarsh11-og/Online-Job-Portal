@@ -39,7 +39,7 @@ public class ActivityWebSocketHandler extends TextWebSocketHandler {
     }
 
     @Override
-    public void afterConnectionClosed(WebSocketSession session, org.springframework.web.socket.CloseStatus status) {
+    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         sessions.remove(session);
         logger.info("WebSocket session closed: {} with status: {}", session.getId(), status);
     }

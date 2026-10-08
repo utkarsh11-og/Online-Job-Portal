@@ -79,4 +79,19 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.email").value(uniqueEmail));
     }
+
+    @Test
+    void register_AdminRole_ReturnsBadRequest() throws Exception {
+        Map<String, String> regRequest = new HashMap<>();
+        regRequest.put("name", "Malicious Admin");
+        regRequest.put("email", "fakeadmin@example.com");
+        regRequest.put("password", "password123");
+        regRequest.put("role", "ADMIN");
+
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(regRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Admin accounts cannot be registered publicly"));
+    }
 }

@@ -5,7 +5,6 @@ import com.company.jobportal.model.User;
 import com.company.jobportal.service.ActivityLogService;
 import com.company.jobportal.service.AuthService;
 import com.company.jobportal.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,21 +14,23 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+    private final AuthService authService;
+    private final UserService userService;
+    private final ActivityLogService activityLogService;
 
-    @Autowired
-    private AuthService authService;
-
-    @Autowired
-    private UserService userService;
-
-    @Autowired
-    private ActivityLogService activityLogService;
+    public AuthController(AuthService authService, UserService userService, ActivityLogService activityLogService) {
+        this.authService = authService;
+        this.userService = userService;
+        this.activityLogService = activityLogService;
+    }
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody User user) {
         try {
             if (user.getRole() == null || user.getRole().trim().isEmpty()) {
                 user.setRole("JOB_SEEKER");
+            } else if ("ADMIN".equalsIgnoreCase(user.getRole().trim())) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Admin accounts cannot be registered publicly"));
             }
             User registeredUser = authService.registerUser(user);
 

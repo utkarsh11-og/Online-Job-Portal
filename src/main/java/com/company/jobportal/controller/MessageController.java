@@ -5,7 +5,6 @@ import com.company.jobportal.model.Message;
 import com.company.jobportal.model.User;
 import com.company.jobportal.service.MessageService;
 import com.company.jobportal.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -19,11 +18,13 @@ import java.util.Map;
 @RequestMapping("/api/messages")
 public class MessageController {
 
-    @Autowired
-    private MessageService messageService;
+    private final MessageService messageService;
+    private final UserService userService;
 
-    @Autowired
-    private UserService userService;
+    public MessageController(MessageService messageService, UserService userService) {
+        this.messageService = messageService;
+        this.userService = userService;
+    }
 
     private User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

@@ -2,7 +2,9 @@
  * JobSphere - Enterprise Job Portal Web App
  */
 
-const API_BASE = '/api';
+const BACKEND_PORT = '8081';
+const IS_CROSS_ORIGIN = window.location.protocol === 'file:' || (window.location.port && window.location.port !== BACKEND_PORT);
+const API_BASE = IS_CROSS_ORIGIN ? `http://localhost:${BACKEND_PORT}/api` : '/api';
 
 const app = {
   token: localStorage.getItem('token') || null,
@@ -14,12 +16,67 @@ const app = {
   activityCallbacks: [], // Callbacks for activity updates
 
   init() {
+    this.initTheme();
+    this.initLanguage();
     this.updateNavAuth();
     this.loadPublicJobs();
 
     // Auto-load dashboard if user was already logged in
     if (this.currentUser) {
       this.openDashboard();
+    }
+
+    // Close mobile nav when clicking outside
+    document.addEventListener('click', (e) => {
+      const navbar = document.getElementById('topNavbar');
+      if (navbar && navbar.classList.contains('menu-open')) {
+        if (!navbar.contains(e.target)) {
+          this.closeMobileMenu();
+        }
+      }
+    });
+
+    // Close modals on backdrop click
+    document.addEventListener('click', (e) => {
+      if (e.target && e.target.classList.contains('modal-backdrop')) {
+        this.closeModals();
+      }
+    });
+
+    // Close modals & language menu on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        this.closeModals();
+        const langMenu = document.getElementById('footerLangMenu');
+        if (langMenu) langMenu.classList.remove('show');
+      }
+    });
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', (e) => {
+      const langDropdown = document.querySelector('.footer-language-dropdown');
+      const langMenu = document.getElementById('footerLangMenu');
+      if (langDropdown && langMenu && langMenu.classList.contains('show')) {
+        if (!langDropdown.contains(e.target)) {
+          langMenu.classList.remove('show');
+        }
+      }
+      const employerDropdown = document.getElementById('employerDropdown');
+      if (employerDropdown && employerDropdown.classList.contains('show')) {
+        const empContainer = employerDropdown.closest('.dropdown-container');
+        if (empContainer && !empContainer.contains(e.target)) {
+          employerDropdown.classList.remove('show');
+        }
+      }
+    });
+  },
+
+  handleNewsletterSubscribe() {
+    const input = document.getElementById('footerSubscribeEmail');
+    if (input && input.value) {
+      const email = input.value;
+      this.showToast(`Thank you! Weekly job alerts confirmed for ${email}`, 'success');
+      input.value = '';
     }
   },
 
@@ -69,24 +126,67 @@ const app = {
   },
 
   formatCurrency(val) {
-    if (!val) return '$0';
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
+    if (!val && val !== 0) return 'Rs 0';
+    const num = Number(val);
+    if (isNaN(num)) return `Rs ${val}`;
+    return 'Rs ' + new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(num);
   },
 
   formatDate(dateStr) {
     if (!dateStr) return '';
     const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    return date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' });
+  },
+
+  currentTheme: localStorage.getItem('jobsphere_theme') || 'linen',
+
+  initTheme() {
+    this.applyTheme(this.currentTheme);
+  },
+
+  applyTheme(theme) {
+    this.currentTheme = theme;
+    localStorage.setItem('jobsphere_theme', theme);
+    const label = document.getElementById('themeToggleText');
+    const toggleBtn = document.getElementById('themeToggleBtn');
+    if (theme === 'black-hole') {
+      document.documentElement.setAttribute('data-theme', 'black-hole');
+      if (label) label.textContent = 'Dark';
+      if (toggleBtn) {
+        toggleBtn.setAttribute('aria-checked', 'true');
+        toggleBtn.title = 'Switch to Light mode (Sustainable Linen)';
+      }
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      if (label) label.textContent = 'Light';
+      if (toggleBtn) {
+        toggleBtn.setAttribute('aria-checked', 'false');
+        toggleBtn.title = 'Switch to Dark mode (Black Hole)';
+      }
+    }
+  },
+
+  toggleTheme() {
+    const nextTheme = this.currentTheme === 'black-hole' ? 'linen' : 'black-hole';
+    this.applyTheme(nextTheme);
+    this.initChartDefaults();
+    // Re-render open dashboard charts if active
+    if (this.currentView === 'admin' && this.currentAdminTab === 'stats') {
+      this.loadAdminStats();
+    } else if (this.currentView === 'employer' && this.currentEmployerTab === 'stats') {
+      this.loadEmployerStats();
+    }
   },
 
   initChartDefaults() {
     if (typeof Chart === 'undefined') return;
-    Chart.defaults.color = '#94a3b8';
-    Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.08)';
+    const isDark = this.currentTheme === 'black-hole';
+    Chart.defaults.color = isDark ? '#F5E7C6' : '#4A463D';
+    Chart.defaults.borderColor = isDark ? 'rgba(245, 231, 198, 0.12)' : 'rgba(34, 34, 34, 0.08)';
     Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
     if (Chart.defaults.plugins && Chart.defaults.plugins.legend) {
       Chart.defaults.plugins.legend.labels.usePointStyle = true;
-      Chart.defaults.plugins.legend.labels.boxWidth = 8;
+      Chart.defaults.plugins.legend.labels.boxWidth = 10;
     }
   },
 
@@ -117,7 +217,8 @@ const app = {
     }
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws/activity`;
+    const host = IS_CROSS_ORIGIN ? `localhost:${BACKEND_PORT}` : window.location.host;
+    const wsUrl = `${protocol}//${host}/ws/activity`;
 
     try {
       this.activityWebSocket = new WebSocket(wsUrl);
@@ -219,18 +320,18 @@ const app = {
       this.cleanupActivityConnections();
     }
 
-    const views = ['viewJobs', 'viewAdminDashboard', 'viewEmployerDashboard', 'viewSeekerDashboard'];
+    const views = ['viewJobs', 'viewAdminDashboard', 'viewEmployerDashboard', 'viewSeekerDashboard', 'viewAbout'];
     views.forEach(v => {
       const el = document.getElementById(v);
       if (el) el.style.display = 'none';
     });
 
-    document.getElementById('navJobsBtn').classList.remove('active');
-    document.getElementById('navDashboardBtn').classList.remove('active');
+    document.getElementById('navJobsBtn')?.classList.remove('active');
+    document.getElementById('navDashboardBtn')?.classList.remove('active');
 
     if (viewName === 'jobs') {
       document.getElementById('viewJobs').style.display = 'block';
-      document.getElementById('navJobsBtn').classList.add('active');
+      document.getElementById('navJobsBtn')?.classList.add('active');
       this.loadPublicJobs();
     } else if (viewName === 'admin') {
       document.getElementById('viewAdminDashboard').style.display = 'block';
@@ -244,6 +345,9 @@ const app = {
       document.getElementById('viewSeekerDashboard').style.display = 'block';
       document.getElementById('navDashboardBtn').classList.add('active');
       this.loadSeekerData();
+    } else if (viewName === 'about') {
+      document.getElementById('viewAbout').style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   },
 
@@ -290,26 +394,274 @@ const app = {
   },
 
   // AUTHENTICATION
-  openAuthModal(mode = 'login') {
+  openAuthModal(mode = 'login', role = 'JOB_SEEKER') {
     const modal = document.getElementById('authModal');
     const loginForm = document.getElementById('loginForm');
     const registerForm = document.getElementById('registerForm');
     const title = document.getElementById('authModalTitle');
 
+    const regRoleSelect = document.getElementById('regRole');
+    if (regRoleSelect) {
+      regRoleSelect.value = role;
+      // Optionally disable changing if role is specifically employer
+      regRoleSelect.style.display = 'none';
+      const roleLabel = regRoleSelect.previousElementSibling;
+      if (roleLabel) roleLabel.style.display = 'none';
+    }
+
     if (mode === 'login') {
       loginForm.style.display = 'block';
       registerForm.style.display = 'none';
-      title.innerText = 'Sign In to JobSphere';
+      title.innerText = role === 'EMPLOYER' ? 'Sign In as Employer' : 'Sign In to JobSphere';
+      // Also update the link at bottom of login to switch to register keeping the role
+      const registerLink = loginForm.querySelector('p a');
+      if (registerLink) registerLink.setAttribute('onclick', `app.openAuthModal('register', '${role}')`);
     } else {
       loginForm.style.display = 'none';
       registerForm.style.display = 'block';
-      title.innerText = 'Create JobSphere Account';
+      title.innerText = role === 'EMPLOYER' ? 'Create Employer Account' : 'Create JobSphere Account';
+      const loginLink = registerForm.querySelector('p a');
+      if (loginLink) loginLink.setAttribute('onclick', `app.openAuthModal('login', '${role}')`);
     }
     modal.classList.add('show');
   },
 
+  openDemoModal() {
+    this.closeMobileMenu();
+    this.closeModals();
+    const modal = document.getElementById('demoModal');
+    if (modal) {
+      modal.classList.add('show');
+    }
+  },
+
   closeModals() {
     document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('show'));
+  },
+
+  toggleDropdown(id) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.classList.toggle('show');
+    }
+  },
+
+  currentLanguage: 'en-IN',
+
+  translations: {
+    'en-IN': {
+      nav_dashboard: 'Dashboard',
+      nav_signin: 'Sign In',
+      nav_register: 'Register',
+      nav_for_employers: 'For Employers',
+      nav_employer_login: 'Employer Login',
+      nav_employer_register: 'Employer Register',
+      nav_logout: 'Logout',
+      nav_quick_demo: 'Quick Demo',
+      hero_title_lead: 'Discover Your Next',
+      hero_title_highlight: 'Career Milestone',
+      hero_subtitle: 'Connect with high-growth companies, verified employers, and cutting-edge engineering roles across India and remote.',
+      search_keyword_placeholder: 'Job title, skills, or company...',
+      search_location_placeholder: 'Bengaluru, Hyderabad, Pune, Remote...',
+      all_job_types: 'All Job Types',
+      job_type_fulltime: 'Full-time',
+      job_type_parttime: 'Part-time',
+      job_type_contract: 'Contract',
+      job_type_remote: 'Remote',
+      search_jobs_btn: 'Search Jobs',
+      featured_opportunities: 'Featured Opportunities',
+      cta_title: 'Ready to Experience JobSphere?',
+      cta_desc: 'Explore open requisitions, post your first role, or test each persona with our instant demo switcher.',
+      cta_explore_jobs: 'Explore Jobs',
+      cta_try_demo: 'Try Instant Demo',
+      footer_general: 'General',
+      footer_browse: 'Browse JobSphere',
+      footer_business_solutions: 'Business Solutions',
+      footer_directories: 'Directories',
+      footer_about: 'About',
+      footer_signup: 'Sign Up',
+      footer_help_center: 'Help Center',
+      footer_careers: 'Careers',
+      footer_developers: 'Developers',
+      footer_learning: 'Learning & Skills',
+      footer_jobs: 'Jobs',
+      footer_engineering: 'Engineering',
+      footer_remote: 'Remote Opportunities',
+      footer_employer_login: 'Employer Login',
+      footer_post_job: 'Post a Job',
+      footer_hiring_solutions: 'Hiring Solutions',
+      footer_talent_hub: 'Talent Hub',
+      footer_enterprise_sales: 'Enterprise Sales',
+      footer_demo_dialog: 'Quick Demo Dialog',
+      footer_select_lang: 'Select Language',
+      apply_now: 'Apply Now'
+    },
+    'hi': {
+      nav_dashboard: 'डैशबोर्ड',
+      nav_signin: 'लॉग इन',
+      nav_register: 'पंजीकरण',
+      nav_for_employers: 'नियोक्ताओं के लिए',
+      nav_employer_login: 'नियोक्ता लॉगिन',
+      nav_employer_register: 'नियोक्ता पंजीकरण',
+      nav_logout: 'लॉग आउट',
+      nav_quick_demo: 'त्वरित डेमो',
+      hero_title_lead: 'अपना अगला',
+      hero_title_highlight: 'करियर मुकाम खोजें',
+      hero_subtitle: 'बेंगलुरु, मुंबई, दिल्ली-एनसीआर, हैदराबाद और रिमोट में शीर्ष कंपनियों और सत्यापित नियोक्ताओं से जुड़ें।',
+      search_keyword_placeholder: 'पद, कौशल या कंपनी...',
+      search_location_placeholder: 'बेंगलुरु, हैदराबाद, पुणे, रिमोट...',
+      all_job_types: 'सभी प्रकार',
+      job_type_fulltime: 'पूर्णकालिक',
+      job_type_parttime: 'अंशकालिक',
+      job_type_contract: 'अनुबंध',
+      job_type_remote: 'रिमोट',
+      search_jobs_btn: 'नौकरियां खोजें',
+      featured_opportunities: 'प्रमुख नौकरियां',
+      cta_title: 'JobSphere का अनुभव लेने के लिए तैयार हैं?',
+      cta_desc: 'उपलब्ध नौकरियां देखें, अपनी पहली नौकरी पोस्ट करें, या हमारे डेमो स्विचर से तुरंत परीक्षण करें।',
+      cta_explore_jobs: 'नौकरियां देखें',
+      cta_try_demo: 'डेमो आज़माएं',
+      footer_general: 'सामान्य',
+      footer_browse: 'JobSphere ब्राउज़ करें',
+      footer_business_solutions: 'व्यावसायिक समाधान',
+      footer_directories: 'निर्देशिकाएं',
+      footer_about: 'हमारे बारे में',
+      footer_signup: 'साइन अप',
+      footer_help_center: 'सहायता केंद्र',
+      footer_careers: 'करियर',
+      footer_developers: 'डेवलपर्स',
+      footer_learning: 'सीखना और कौशल',
+      footer_jobs: 'नौकरियां',
+      footer_engineering: 'इंजीनियरिंग',
+      footer_remote: 'रिमोट अवसर',
+      footer_employer_login: 'नियोक्ता लॉगिन',
+      footer_post_job: 'नौकरी पोस्ट करें',
+      footer_hiring_solutions: 'हायरिंग समाधान',
+      footer_talent_hub: 'टैलेंट हब',
+      footer_enterprise_sales: 'एंटरप्राइज बिक्री',
+      footer_demo_dialog: 'त्वरित डेमो डायलॉग',
+      footer_select_lang: 'भाषा चुनें',
+      apply_now: 'आवेदन करें'
+    }
+  },
+
+  t(key, fallback = '') {
+    const dict = this.translations[this.currentLanguage] || this.translations['en-IN'] || {};
+    if (dict[key] !== undefined) return dict[key];
+    const defaultDict = this.translations['en-IN'] || {};
+    return defaultDict[key] !== undefined ? defaultDict[key] : fallback;
+  },
+
+  applyTranslations(langCode) {
+    this.currentLanguage = langCode || 'en-IN';
+    document.documentElement.lang = this.currentLanguage;
+
+    // Update text content of data-i18n elements
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      const val = this.t(key);
+      if (val) {
+        el.textContent = val;
+      }
+    });
+
+    // Update placeholder attributes
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+      const key = el.getAttribute('data-i18n-placeholder');
+      const val = this.t(key);
+      if (val) {
+        el.setAttribute('placeholder', val);
+      }
+    });
+
+    // Localize apply buttons on already rendered job cards
+    document.querySelectorAll('.job-card .btn-primary').forEach(btn => {
+      const attr = btn.getAttribute('onclick');
+      if (attr && attr.includes('openApplyModal')) {
+        btn.textContent = this.t('apply_now', 'Apply Now');
+      }
+    });
+  },
+
+  initLanguage() {
+    try {
+      let saved = JSON.parse(localStorage.getItem('jobportal_lang') || 'null');
+      if (!saved || (saved.code !== 'en-IN' && saved.code !== 'hi')) {
+        saved = { code: 'en-IN', name: 'English (India)' };
+        localStorage.setItem('jobportal_lang', JSON.stringify(saved));
+      }
+      this.currentLanguage = saved.code || 'en-IN';
+      const label = document.getElementById('selectedLanguageText');
+      if (label && saved.name) label.textContent = saved.name;
+      document.querySelectorAll('.footer-lang-item').forEach(item => {
+        const isMatch = item.getAttribute('data-lang') === this.currentLanguage;
+        item.classList.toggle('active', isMatch);
+        let check = item.querySelector('.footer-lang-check');
+        if (isMatch && !check) {
+          check = document.createElement('span');
+          check.className = 'footer-lang-check';
+          check.textContent = '✓';
+          item.appendChild(check);
+        } else if (!isMatch && check) {
+          check.remove();
+        }
+      });
+      this.applyTranslations(this.currentLanguage);
+    } catch (e) {
+      console.warn('Could not restore saved language preference', e);
+      this.applyTranslations('en-IN');
+    }
+  },
+
+  selectLanguage(code, name) {
+    if (code !== 'en-IN' && code !== 'hi') {
+      code = 'en-IN';
+      name = 'English (India)';
+    }
+    this.currentLanguage = code;
+    localStorage.setItem('jobportal_lang', JSON.stringify({ code, name }));
+    const label = document.getElementById('selectedLanguageText');
+    if (label) {
+      label.textContent = name;
+    }
+    document.querySelectorAll('.footer-lang-item').forEach(item => {
+      const isMatch = item.getAttribute('data-lang') === code;
+      item.classList.toggle('active', isMatch);
+      let check = item.querySelector('.footer-lang-check');
+      if (isMatch && !check) {
+        check = document.createElement('span');
+        check.className = 'footer-lang-check';
+        check.textContent = '✓';
+        item.appendChild(check);
+      } else if (!isMatch && check) {
+        check.remove();
+      }
+    });
+    const menu = document.getElementById('footerLangMenu');
+    if (menu) {
+      menu.classList.remove('show');
+    }
+    this.applyTranslations(code);
+    this.showToast(`Language set to ${name}`, 'success');
+  },
+
+  toggleMobileMenu() {
+    const navbar = document.getElementById('topNavbar');
+    if (navbar) {
+      navbar.classList.toggle('menu-open');
+      const isExpanded = navbar.classList.contains('menu-open');
+      const btn = document.getElementById('mobileMenuBtn');
+      if (btn) btn.setAttribute('aria-expanded', isExpanded);
+    }
+  },
+
+  closeMobileMenu() {
+    const navbar = document.getElementById('topNavbar');
+    if (navbar && navbar.classList.contains('menu-open')) {
+      navbar.classList.remove('menu-open');
+      const btn = document.getElementById('mobileMenuBtn');
+      if (btn) btn.setAttribute('aria-expanded', 'false');
+    }
   },
 
   async submitLogin(e) {
@@ -348,7 +700,8 @@ const app = {
     const name = document.getElementById('regName').value;
     const email = document.getElementById('regEmail').value;
     const password = document.getElementById('regPassword').value;
-    const role = document.getElementById('regRole').value;
+    const roleEl = document.getElementById('regRole');
+    const role = roleEl ? roleEl.value : 'JOB_SEEKER';
 
     try {
       const res = await fetch(`${API_BASE}/auth/register`, {
@@ -363,7 +716,7 @@ const app = {
       }
 
       this.showToast('Account created successfully! Please sign in.', 'success');
-      this.openAuthModal('login');
+      this.openAuthModal('login', role);
       document.getElementById('loginEmail').value = email;
     } catch (err) {
       this.showToast('Error registering account', 'error');
@@ -371,6 +724,7 @@ const app = {
   },
 
   async demoLogin(email, password) {
+    this.closeModals();
     try {
       const res = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
@@ -461,9 +815,18 @@ const app = {
             <div class="job-company">${company}</div>
             <h3 class="job-title">${job.title}</h3>
             <div class="job-meta-chips">
-              <span class="chip">${job.location || 'Remote'}</span>
-              <span class="chip">${job.jobType || 'Full-time'}</span>
-              <span class="chip salary">${salary} / yr</span>
+              <span class="chip">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                ${job.location || 'Remote'}
+              </span>
+              <span class="chip">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                ${job.jobType || 'Full-time'}
+              </span>
+              <span class="chip salary">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+                ${salary} / yr
+              </span>
             </div>
             <p class="job-desc">${job.description}</p>
             <div class="job-requirements">
@@ -473,7 +836,7 @@ const app = {
           <div class="job-card-footer">
             <span style="font-size:0.75rem; color:var(--text-muted);">Posted ${this.formatDate(job.createdAt)}</span>
             <button class="btn-primary" style="padding:0.5rem 1.1rem; font-size:0.88rem;" onclick="app.openApplyModal(${job.id}, '${escape(job.title)}', '${escape(company)}')">
-              Apply Now
+              ${this.t('apply_now', 'Apply Now')}
             </button>
           </div>
         </div>
@@ -684,12 +1047,13 @@ const app = {
           datasets: [{
             label: 'Activities',
             data: trendValues,
-            borderColor: '#3b82f6',
-            backgroundColor: 'rgba(59, 130, 246, 0.15)',
-            borderWidth: 2,
+            borderColor: '#FF6D1F',
+            backgroundColor: 'rgba(255, 109, 31, 0.16)',
+            borderWidth: 2.5,
             tension: 0.35,
             fill: true,
-            pointBackgroundColor: '#60a5fa',
+            pointBackgroundColor: '#FF6D1F',
+            pointBorderColor: '#FAF3E1',
             pointRadius: 4,
             pointHoverRadius: 6
           }]
@@ -704,7 +1068,7 @@ const app = {
             y: {
               beginAtZero: true,
               ticks: { precision: 0 },
-              grid: { color: 'rgba(255, 255, 255, 0.05)' }
+              grid: { color: this.currentTheme === 'black-hole' ? 'rgba(245, 231, 198, 0.08)' : 'rgba(34, 34, 34, 0.06)' }
             },
             x: {
               grid: { display: false }
@@ -726,7 +1090,7 @@ const app = {
           labels: ['Pending Review', 'Shortlisted', 'Accepted / Hired', 'Rejected'],
           datasets: [{
             data: appCounts,
-            backgroundColor: ['#f59e0b', '#3b82f6', '#10b981', '#f43f5e'],
+            backgroundColor: ['#F5E7C6', '#FF6D1F', '#222222', '#B91C1C'],
             borderWidth: 0
           }]
         },
@@ -755,7 +1119,7 @@ const app = {
           datasets: [{
             label: 'Actions',
             data: actionValues.length ? actionValues : [0],
-            backgroundColor: '#06b6d4',
+            backgroundColor: '#FF6D1F',
             borderRadius: 6
           }]
         },
@@ -787,7 +1151,7 @@ const app = {
           datasets: [{
             label: 'Jobs',
             data: [stats.approvedJobs || 0, stats.pendingJobs || 0, stats.rejectedJobs || 0],
-            backgroundColor: ['#10b981', '#f59e0b', '#f43f5e'],
+            backgroundColor: ['#222222', '#FF6D1F', '#F5E7C6'],
             borderRadius: 6
           }]
         },
@@ -1176,7 +1540,7 @@ const app = {
           labels: ['Under Review', 'Shortlisted', 'Hired / Accepted', 'Declined'],
           datasets: [{
             data: empStatusCounts,
-            backgroundColor: ['#f59e0b', '#3b82f6', '#10b981', '#f43f5e'],
+            backgroundColor: ['#F5E7C6', '#FF6D1F', '#222222', '#B91C1C'],
             borderWidth: 0
           }]
         },
@@ -1205,7 +1569,7 @@ const app = {
           datasets: [{
             label: 'Applicants',
             data: applicantCounts.length ? applicantCounts : [0],
-            backgroundColor: '#8b5cf6',
+            backgroundColor: '#FF6D1F',
             borderRadius: 6
           }]
         },
@@ -1270,9 +1634,9 @@ const app = {
     } else {
       document.getElementById('jobTitleInput').value = '';
       document.getElementById('jobCompanyInput').value = this.currentUser ? this.currentUser.name : '';
-      document.getElementById('jobLocationInput').value = 'San Francisco, CA / Remote';
+      document.getElementById('jobLocationInput').value = 'Bengaluru, Karnataka / Remote';
       document.getElementById('jobTypeInput').value = 'Full-time';
-      document.getElementById('jobSalaryInput').value = '120000';
+      document.getElementById('jobSalaryInput').value = '1200000';
       document.getElementById('jobRequirementsInput').value = '';
       document.getElementById('jobDescriptionInput').value = '';
       document.getElementById('jobStatusGroup').style.display = 'none';
@@ -1369,11 +1733,11 @@ const app = {
           <td><strong>${a.jobListing.title}</strong></td>
           <td style="max-width:200px;">
             <div style="font-size:0.8rem; color:var(--text-secondary);">${a.jobSeeker.headline || '—'}</div>
-            <div style="font-size:0.75rem; color:#60a5fa; margin-top:2px;">${a.jobSeeker.skills || ''}</div>
+            <div style="font-size:0.75rem; color:var(--accent-primary); font-weight:600; margin-top:2px;">${a.jobSeeker.skills || ''}</div>
           </td>
           <td style="max-width:240px;">
             <div style="font-size:0.82rem; font-style:italic; margin-bottom:4px;">"${a.coverLetter || ''}"</div>
-            ${a.resumeUrl ? `<a href="${a.resumeUrl}" target="_blank" style="font-size:0.8rem; color:#38bdf8; text-decoration:underline;">📄 View Resume</a>` : '<span style="color:var(--text-muted); font-size:0.75rem;">No resume attached</span>'}
+            ${a.resumeUrl ? `<a href="${a.resumeUrl}" target="_blank" style="font-size:0.8rem; color:var(--accent-primary); text-decoration:underline;">📄 View Resume</a>` : '<span style="color:var(--text-muted); font-size:0.75rem;">No resume attached</span>'}
           </td>
           <td><span class="status-badge ${a.status.toLowerCase()}">${a.status}</span></td>
           <td>
@@ -1608,11 +1972,11 @@ const app = {
       tbody.innerHTML = apps.map(a => `
         <tr>
           <td style="font-weight:600;">${a.jobListing.title}</td>
-          <td style="color:#60a5fa;">${a.jobListing.companyName || (a.jobListing.employer ? a.jobListing.employer.name : 'Employer')}</td>
+          <td style="color:var(--accent-primary); font-weight:700;">${a.jobListing.companyName || (a.jobListing.employer ? a.jobListing.employer.name : 'Employer')}</td>
           <td style="color:var(--text-muted); font-size:0.85rem;">${this.formatDate(a.appliedAt)}</td>
           <td><span class="status-badge ${a.status.toLowerCase()}">${a.status}</span></td>
           <td>
-            ${a.resumeUrl ? `<a href="${a.resumeUrl}" target="_blank" style="color:#38bdf8; text-decoration:underline; font-size:0.85rem;">📄 Attached Resume</a>` : '<span style="color:var(--text-muted);">Profile CV</span>'}
+            ${a.resumeUrl ? `<a href="${a.resumeUrl}" target="_blank" style="color:var(--accent-primary); text-decoration:underline; font-size:0.85rem;">📄 Attached Resume</a>` : '<span style="color:var(--text-muted);">Profile CV</span>'}
           </td>
           <td>
             <button class="btn-secondary" style="padding:0.35rem 0.75rem;" onclick="app.startChatWithUser(${a.jobListing.employer.id}, '${escape(a.jobListing.companyName || a.jobListing.employer.name)}', 'EMPLOYER')">
@@ -1782,5 +2146,14 @@ const app = {
     }
   }
 };
+window.app = app;
 
 window.addEventListener('DOMContentLoaded', () => app.init());
+
+window.addEventListener('click', function(e) {
+  if (!e.target.closest('.dropdown-container')) {
+    document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+      menu.classList.remove('show');
+    });
+  }
+});

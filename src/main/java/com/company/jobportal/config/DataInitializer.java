@@ -9,31 +9,32 @@ import com.company.jobportal.repository.JobListingRepository;
 import com.company.jobportal.repository.MessageRepository;
 import com.company.jobportal.repository.UserRepository;
 import com.company.jobportal.service.ActivityLogService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
+    private final UserRepository userRepository;
+    private final JobListingRepository jobListingRepository;
+    private final ApplicationRepository applicationRepository;
+    private final MessageRepository messageRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
+    private final ActivityLogService activityLogService;
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private JobListingRepository jobListingRepository;
-
-    @Autowired
-    private ApplicationRepository applicationRepository;
-
-    @Autowired
-    private MessageRepository messageRepository;
-
-    @Autowired
-    private BCryptPasswordEncoder passwordEncoder;
-
-    @Autowired
-    private ActivityLogService activityLogService;
+    public DataInitializer(UserRepository userRepository,
+                           JobListingRepository jobListingRepository,
+                           ApplicationRepository applicationRepository,
+                           MessageRepository messageRepository,
+                           BCryptPasswordEncoder passwordEncoder,
+                           ActivityLogService activityLogService) {
+        this.userRepository = userRepository;
+        this.jobListingRepository = jobListingRepository;
+        this.applicationRepository = applicationRepository;
+        this.messageRepository = messageRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.activityLogService = activityLogService;
+    }
 
     @Override
     public void run(String... args) {
@@ -56,7 +57,7 @@ public class DataInitializer implements CommandLineRunner {
         employer1.setPassword(passwordEncoder.encode("employer123"));
         employer1.setRole("EMPLOYER");
         employer1.setHeadline("Leading Enterprise Cloud Solutions");
-        employer1.setPhone("+1-555-0199");
+        employer1.setPhone("+91-98450-12345");
         employer1 = userRepository.save(employer1);
 
         User employer2 = new User();
@@ -65,7 +66,7 @@ public class DataInitializer implements CommandLineRunner {
         employer2.setPassword(passwordEncoder.encode("employer123"));
         employer2.setRole("EMPLOYER");
         employer2.setHeadline("Pioneering Next-Gen AI Applications");
-        employer2.setPhone("+1-555-0288");
+        employer2.setPhone("+91-98100-67890");
         employer2 = userRepository.save(employer2);
 
         User seeker1 = new User();
@@ -75,7 +76,7 @@ public class DataInitializer implements CommandLineRunner {
         seeker1.setRole("JOB_SEEKER");
         seeker1.setHeadline("Senior Full-Stack & Spring Boot Architect");
         seeker1.setSkills("Java, Spring Boot, Microservices, React, Docker, SQL, REST APIs");
-        seeker1.setPhone("+1-555-0377");
+        seeker1.setPhone("+91-98200-54321");
         seeker1 = userRepository.save(seeker1);
 
         User seeker2 = new User();
@@ -85,7 +86,7 @@ public class DataInitializer implements CommandLineRunner {
         seeker2.setRole("JOB_SEEKER");
         seeker2.setHeadline("Data Scientist & Machine Learning Specialist");
         seeker2.setSkills("Python, PyTorch, SQL, Big Data, Machine Learning, Data Analytics");
-        seeker2.setPhone("+1-555-0466");
+        seeker2.setPhone("+91-98840-98765");
         seeker2 = userRepository.save(seeker2);
 
         // 2. Create Job Listings
@@ -94,8 +95,8 @@ public class DataInitializer implements CommandLineRunner {
         job1.setCompanyName("TechCorp Solutions");
         job1.setDescription("We are seeking an experienced Java Engineer to build high-scale microservices and distributed transaction pipelines. You will collaborate with cloud architects and product managers to deliver enterprise-grade APIs.");
         job1.setRequirements("5+ years Java, Spring Boot, Spring Security, Hibernate, MySQL/PostgreSQL, Docker, RESTful APIs");
-        job1.setSalary(145000.0);
-        job1.setLocation("San Francisco, CA / Remote");
+        job1.setSalary(1850000.0);
+        job1.setLocation("Bengaluru, Karnataka / Remote");
         job1.setJobType("Full-time");
         job1.setEmployer(employer1);
         job1.setStatus("ACTIVE");
@@ -107,8 +108,8 @@ public class DataInitializer implements CommandLineRunner {
         job2.setCompanyName("TechCorp Solutions");
         job2.setDescription("Design and implement responsive modern interfaces coupled with robust Spring Boot backend services. Drive end-to-end features from inception through automated deployment.");
         job2.setRequirements("Strong knowledge of Java 17+, React, TypeScript, Tailwind/CSS, Spring Data JPA, Git workflows");
-        job2.setSalary(125000.0);
-        job2.setLocation("Austin, TX / Hybrid");
+        job2.setSalary(1450000.0);
+        job2.setLocation("Hyderabad, Telangana / Hybrid");
         job2.setJobType("Full-time");
         job2.setEmployer(employer1);
         job2.setStatus("ACTIVE");
@@ -120,8 +121,8 @@ public class DataInitializer implements CommandLineRunner {
         job3.setCompanyName("Innovate Labs");
         job3.setDescription("Join our research and product development team to fine-tune generative models, build autonomous agents, and evaluate NLP retrieval systems at scale.");
         job3.setRequirements("Python, PyTorch, Hugging Face, Vector Databases, Data Analysis, Cloud GPUs, PhD or MS in Computer Science preferred");
-        job3.setSalary(160000.0);
-        job3.setLocation("New York, NY / Remote");
+        job3.setSalary(2200000.0);
+        job3.setLocation("Pune, Maharashtra / Remote");
         job3.setJobType("Full-time");
         job3.setEmployer(employer2);
         job3.setStatus("ACTIVE");
@@ -133,8 +134,8 @@ public class DataInitializer implements CommandLineRunner {
         job4.setCompanyName("Innovate Labs");
         job4.setDescription("Own CI/CD pipelines, Kubernetes clusters, and cloud security compliance across multicloud production deployments.");
         job4.setRequirements("Kubernetes, Terraform, AWS/GCP, Docker, Linux administration, Prometheus & Grafana monitoring");
-        job4.setSalary(135000.0);
-        job4.setLocation("Remote");
+        job4.setSalary(1600000.0);
+        job4.setLocation("Remote (India)");
         job4.setJobType("Contract");
         job4.setEmployer(employer2);
         job4.setStatus("ACTIVE");

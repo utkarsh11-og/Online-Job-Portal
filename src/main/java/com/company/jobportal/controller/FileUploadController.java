@@ -1,7 +1,6 @@
 package com.company.jobportal.controller;
 
 import com.company.jobportal.service.FileUploadService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -15,9 +14,11 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/files")
 public class FileUploadController {
+    private final FileUploadService fileUploadService;
 
-    @Autowired
-    private FileUploadService fileUploadService;
+    public FileUploadController(FileUploadService fileUploadService) {
+        this.fileUploadService = fileUploadService;
+    }
 
     @PostMapping("/upload")
     public ResponseEntity<?> uploadFile(@RequestParam("file") MultipartFile file) {

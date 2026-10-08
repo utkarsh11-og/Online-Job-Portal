@@ -7,7 +7,6 @@ import com.company.jobportal.model.User;
 import com.company.jobportal.repository.JobListingRepository;
 import com.company.jobportal.repository.MessageRepository;
 import com.company.jobportal.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -16,17 +15,20 @@ import java.util.List;
 @Service
 public class MessageServiceImpl implements MessageService {
 
-    @Autowired
-    private MessageRepository messageRepository;
+    private final MessageRepository messageRepository;
+    private final UserRepository userRepository;
+    private final JobListingRepository jobListingRepository;
+    private final ActivityLogService activityLogService;
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private JobListingRepository jobListingRepository;
-
-    @Autowired
-    private ActivityLogService activityLogService;
+    public MessageServiceImpl(MessageRepository messageRepository,
+                              UserRepository userRepository,
+                              JobListingRepository jobListingRepository,
+                              ActivityLogService activityLogService) {
+        this.messageRepository = messageRepository;
+        this.userRepository = userRepository;
+        this.jobListingRepository = jobListingRepository;
+        this.activityLogService = activityLogService;
+    }
 
     @Override
     public Message sendMessage(User sender, MessageRequest request) {

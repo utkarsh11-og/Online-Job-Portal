@@ -6,7 +6,6 @@ import com.company.jobportal.model.JobListing;
 import com.company.jobportal.model.User;
 import com.company.jobportal.repository.ApplicationRepository;
 import com.company.jobportal.repository.JobListingRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,15 +13,17 @@ import java.util.Optional;
 
 @Service
 public class ApplicationServiceImpl implements ApplicationService {
+    private final ApplicationRepository applicationRepository;
+    private final JobListingRepository jobListingRepository;
+    private final ActivityLogService activityLogService;
 
-    @Autowired
-    private ApplicationRepository applicationRepository;
-
-    @Autowired
-    private JobListingRepository jobListingRepository;
-
-    @Autowired
-    private ActivityLogService activityLogService;
+    public ApplicationServiceImpl(ApplicationRepository applicationRepository,
+                                  JobListingRepository jobListingRepository,
+                                  ActivityLogService activityLogService) {
+        this.applicationRepository = applicationRepository;
+        this.jobListingRepository = jobListingRepository;
+        this.activityLogService = activityLogService;
+    }
 
     @Override
     public Application applyForJob(User jobSeeker, ApplicationRequest request) {

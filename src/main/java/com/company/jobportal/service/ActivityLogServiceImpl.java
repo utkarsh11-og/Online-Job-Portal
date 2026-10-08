@@ -2,7 +2,6 @@ package com.company.jobportal.service;
 
 import com.company.jobportal.model.ActivityLog;
 import com.company.jobportal.repository.ActivityLogRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.company.jobportal.websocket.ActivityWebSocketHandler;
 
@@ -10,12 +9,14 @@ import java.util.List;
 
 @Service
 public class ActivityLogServiceImpl implements ActivityLogService {
+    private final ActivityLogRepository activityLogRepository;
+    private final ActivityWebSocketHandler activityWebSocketHandler;
 
-    @Autowired
-    private ActivityLogRepository activityLogRepository;
-
-    @Autowired
-    private ActivityWebSocketHandler activityWebSocketHandler;
+    public ActivityLogServiceImpl(ActivityLogRepository activityLogRepository,
+                                  ActivityWebSocketHandler activityWebSocketHandler) {
+        this.activityLogRepository = activityLogRepository;
+        this.activityWebSocketHandler = activityWebSocketHandler;
+    }
 
     @Override
     public void logActivity(String userEmail, String userRole, String action, String details) {

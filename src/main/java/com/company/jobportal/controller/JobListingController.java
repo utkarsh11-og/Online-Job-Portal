@@ -5,7 +5,6 @@ import com.company.jobportal.model.User;
 import com.company.jobportal.service.DashboardStatsService;
 import com.company.jobportal.service.JobListingService;
 import com.company.jobportal.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -19,14 +18,17 @@ import java.util.Map;
 @RequestMapping("/api/jobs")
 public class JobListingController {
 
-    @Autowired
-    private JobListingService jobListingService;
+    private final JobListingService jobListingService;
+    private final UserService userService;
+    private final DashboardStatsService dashboardStatsService;
 
-    @Autowired
-    private UserService userService;
-
-    @Autowired
-    private DashboardStatsService dashboardStatsService;
+    public JobListingController(JobListingService jobListingService,
+                                UserService userService,
+                                DashboardStatsService dashboardStatsService) {
+        this.jobListingService = jobListingService;
+        this.userService = userService;
+        this.dashboardStatsService = dashboardStatsService;
+    }
 
     private User getAuthenticatedUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

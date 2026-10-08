@@ -7,7 +7,6 @@ import com.company.jobportal.service.ActivityLogService;
 import com.company.jobportal.service.DashboardStatsService;
 import com.company.jobportal.service.JobListingService;
 import com.company.jobportal.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,18 +16,20 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/admin")
 public class AdminController {
+    private final DashboardStatsService dashboardStatsService;
+    private final ActivityLogService activityLogService;
+    private final JobListingService jobListingService;
+    private final UserService userService;
 
-    @Autowired
-    private DashboardStatsService dashboardStatsService;
-
-    @Autowired
-    private ActivityLogService activityLogService;
-
-    @Autowired
-    private JobListingService jobListingService;
-
-    @Autowired
-    private UserService userService;
+    public AdminController(DashboardStatsService dashboardStatsService,
+                           ActivityLogService activityLogService,
+                           JobListingService jobListingService,
+                           UserService userService) {
+        this.dashboardStatsService = dashboardStatsService;
+        this.activityLogService = activityLogService;
+        this.jobListingService = jobListingService;
+        this.userService = userService;
+    }
 
     @GetMapping("/stats")
     public ResponseEntity<Map<String, Object>> getStats() {

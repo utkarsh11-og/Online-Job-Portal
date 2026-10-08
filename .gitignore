@@ -5,3 +5,4 @@ maven.log
 .idea/
 *.iml
 .worktrees/
+uploads/

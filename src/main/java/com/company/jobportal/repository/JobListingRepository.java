@@ -4,11 +4,8 @@ import com.company.jobportal.model.JobListing;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
-
 import java.util.List;
 
-@Repository
 public interface JobListingRepository extends JpaRepository<JobListing, Long> {
     List<JobListing> findByEmployerId(Long employerId);
     List<JobListing> findByEmployerIdOrderByCreatedAtDesc(Long employerId);

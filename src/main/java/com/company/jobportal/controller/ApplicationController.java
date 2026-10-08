@@ -5,7 +5,6 @@ import com.company.jobportal.model.Application;
 import com.company.jobportal.model.User;
 import com.company.jobportal.service.ApplicationService;
 import com.company.jobportal.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -19,11 +18,13 @@ import java.util.Map;
 @RequestMapping("/api/applications")
 public class ApplicationController {
 
-    @Autowired
-    private ApplicationService applicationService;
+    private final ApplicationService applicationService;
+    private final UserService userService;
 
-    @Autowired
-    private UserService userService;
+    public ApplicationController(ApplicationService applicationService, UserService userService) {
+        this.applicationService = applicationService;
+        this.userService = userService;
+    }
 
     private User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

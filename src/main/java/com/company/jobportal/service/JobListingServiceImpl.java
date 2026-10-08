@@ -4,7 +4,6 @@ import com.company.jobportal.model.JobListing;
 import com.company.jobportal.model.User;
 import com.company.jobportal.repository.JobListingRepository;
 import com.company.jobportal.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -16,17 +15,20 @@ import java.util.stream.Collectors;
 @Service
 public class JobListingServiceImpl implements JobListingService {
 
-    @Autowired
-    private JobListingRepository jobListingRepository;
+    private final JobListingRepository jobListingRepository;
+    private final UserRepository userRepository;
+    private final SystemSettingService systemSettingService;
+    private final ActivityLogService activityLogService;
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private SystemSettingService systemSettingService;
-
-    @Autowired
-    private ActivityLogService activityLogService;
+    public JobListingServiceImpl(JobListingRepository jobListingRepository,
+                                 UserRepository userRepository,
+                                 SystemSettingService systemSettingService,
+                                 ActivityLogService activityLogService) {
+        this.jobListingRepository = jobListingRepository;
+        this.userRepository = userRepository;
+        this.systemSettingService = systemSettingService;
+        this.activityLogService = activityLogService;
+    }
 
     @Override
     public JobListing createJobListing(JobListing jobListing) {
@@ -103,16 +105,16 @@ public class JobListingServiceImpl implements JobListingService {
         List<String> userKeywords = new ArrayList<>();
         if (jobSeeker.getSkills() != null) {
             Arrays.stream(jobSeeker.getSkills().split("[,;\\s]+"))
-                    .map(String::trim)
+                    .map(s -> s.trim())
                     .filter(s -> !s.isEmpty())
-                    .map(String::toLowerCase)
+                    .map(s -> s.toLowerCase())
                     .forEach(userKeywords::add);
         }
         if (jobSeeker.getHeadline() != null) {
             Arrays.stream(jobSeeker.getHeadline().split("[,;\\s]+"))
-                    .map(String::trim)
+                    .map(s -> s.trim())
                     .filter(s -> s.length() > 2)
-                    .map(String::toLowerCase)
+                    .map(s -> s.toLowerCase())
                     .forEach(userKeywords::add);
         }
 

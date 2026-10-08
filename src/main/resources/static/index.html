@@ -13,42 +13,49 @@
 <body>
 
   <!-- Top Navigation Bar -->
-  <header class="navbar">
-    <div class="brand" onclick="app.showView('jobs')">
+  <header class="navbar" id="topNavbar">
+    <div class="brand" onclick="app.showView('jobs'); app.closeMobileMenu();">
       <div class="brand-icon">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
       </div>
-      <span>Job<span style="color:#60a5fa">Sphere</span></span>
-      <span class="brand-badge">Enterprise</span>
+      <span>Job<span style="color:var(--accent-primary)">Sphere</span></span>
     </div>
 
-    <!-- Quick Role-Switcher / Demo Logins -->
-    <div class="demo-pills" id="demoPills">
-      <span style="font-size:0.75rem; color:var(--text-muted); margin-right:4px;">Quick Demo:</span>
-      <button class="demo-pill" onclick="app.demoLogin('admin@jobportal.com', 'admin123')">Admin</button>
-      <button class="demo-pill" onclick="app.demoLogin('employer@techcorp.com', 'employer123')">Employer</button>
-      <button class="demo-pill" onclick="app.demoLogin('seeker@example.com', 'seeker123')">Job Seeker</button>
-    </div>
+    <!-- Nav Links & Auth Controls (Desktop flex row, Mobile drop drawer) -->
+    <div class="nav-links" id="navLinksContainer">
 
-    <!-- Nav Links & Auth Controls -->
-    <div class="nav-links">
-      <button class="nav-btn active" id="navJobsBtn" onclick="app.showView('jobs')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-        Browse Jobs
-      </button>
-
-      <button class="nav-btn" id="navDashboardBtn" style="display:none;" onclick="app.openDashboard()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
-        <span id="navDashboardText">Dashboard</span>
+      <button class="nav-btn" id="navDashboardBtn" style="display:none;" onclick="app.openDashboard(); app.closeMobileMenu();">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+        <span id="navDashboardText" data-i18n="nav_dashboard">Dashboard</span>
       </button>
 
       <!-- Auth State UI -->
-      <div id="loggedOutNav" style="display: flex; gap: 0.5rem;">
-        <button class="btn-secondary" onclick="app.openAuthModal('login')">Sign In</button>
-        <button class="btn-primary" onclick="app.openAuthModal('register')">Register</button>
+      <div id="loggedOutNav" class="logged-out-nav">
+        <button class="btn-secondary" onclick="app.openAuthModal('login', 'JOB_SEEKER'); app.closeMobileMenu();">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+          <span data-i18n="nav_signin">Sign In</span>
+        </button>
+        <button class="btn-primary" onclick="app.openAuthModal('register', 'JOB_SEEKER'); app.closeMobileMenu();">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+          <span data-i18n="nav_register">Register</span>
+        </button>
+        
+        <div class="nav-auth-divider desktop-only"></div>
+
+        <div class="dropdown-container">
+          <button class="btn-text-dropdown" onclick="app.toggleDropdown('employerDropdown')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            <span data-i18n="nav_for_employers">For Employers</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left:1px;"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="dropdown-menu" id="employerDropdown">
+            <a href="#" onclick="app.openAuthModal('login', 'EMPLOYER'); app.toggleDropdown('employerDropdown'); app.closeMobileMenu(); return false;" data-i18n="nav_employer_login">Employer Login</a>
+            <a href="#" onclick="app.openAuthModal('register', 'EMPLOYER'); app.toggleDropdown('employerDropdown'); app.closeMobileMenu(); return false;" data-i18n="nav_employer_register">Employer Register</a>
+          </div>
+        </div>
       </div>
 
-      <div id="loggedInNav" style="display:none; align-items:center; gap:0.75rem;">
+      <div id="loggedInNav" class="logged-in-nav" style="display:none;">
         <div class="user-profile-badge">
           <div class="user-avatar" id="navUserAvatar">U</div>
           <div style="line-height:1.2;">
@@ -56,11 +63,47 @@
             <span class="role-tag" id="navUserRole">ROLE</span>
           </div>
         </div>
-        <button class="btn-secondary" style="padding:0.45rem 0.85rem;" onclick="app.logout()">
+        <button class="btn-secondary" style="padding:0.45rem 0.85rem;" onclick="app.logout(); app.closeMobileMenu();">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
-          Logout
+          <span data-i18n="nav_logout">Logout</span>
         </button>
       </div>
+
+      <!-- Quick Demo Trigger inside Mobile Drawer -->
+      <div class="mobile-demo-section">
+        <button class="btn-quick-demo-drawer" onclick="app.openDemoModal(); app.closeMobileMenu();">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          Quick Demo (ADMIN • EMPLOYER • JOB SEEKER)
+        </button>
+      </div>
+    </div>
+
+    <!-- Right Controls: Quick Demo Trigger, Theme Switch & Mobile Hamburger -->
+    <div class="navbar-actions">
+      <button class="btn-quick-demo" id="demoDialogBtn" onclick="app.openDemoModal()" title="Instant Demo Access (Admin, Employer, Job Seeker)">
+        <svg class="demo-btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+        </svg>
+        <span class="demo-btn-label" data-i18n="nav_quick_demo">Quick Demo</span>
+      </button>
+
+      <button class="theme-switch-toggle" id="themeToggleBtn" onclick="app.toggleTheme()" role="switch" aria-checked="false" title="Switch between Light and Dark mode">
+        <span class="theme-switch-track">
+          <span class="theme-switch-icon sun-icon">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+          </span>
+          <span class="theme-switch-thumb"></span>
+          <span class="theme-switch-icon moon-icon">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+          </span>
+        </span>
+        <span class="theme-switch-text desktop-only" id="themeToggleText">Light</span>
+      </button>
+
+      <button class="mobile-menu-toggle" id="mobileMenuBtn" onclick="app.toggleMobileMenu()" aria-label="Toggle navigation menu" aria-expanded="false">
+        <svg class="menu-icon-bars" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        <svg class="menu-icon-cross" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
   </header>
 
@@ -70,37 +113,39 @@
     <!-- VIEW: PUBLIC JOB EXPLORER -->
     <div id="viewJobs">
       <section class="hero-section">
-        <h1 class="hero-title">Discover Your Next <span class="hero-gradient">Career Milestone</span></h1>
-        <p class="hero-subtitle">Connect with high-growth companies, verified employers, and cutting-edge engineering roles across the globe.</p>
+        <h1 class="hero-title"><span data-i18n="hero_title_lead">Discover Your Next</span> <span class="hero-gradient" data-i18n="hero_title_highlight">Career Milestone</span></h1>
+        <p class="hero-subtitle" data-i18n="hero_subtitle">Connect with high-growth companies, verified employers, and cutting-edge engineering roles across India and remote.</p>
 
         <!-- Search Form Bar -->
         <div class="search-box-container">
-          <div class="search-field">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-            <input type="text" id="searchKeyword" class="search-input" placeholder="Job title, skills, or company..." onkeydown="if(event.key==='Enter') app.searchJobs()">
+          <div class="search-field search-field-keyword">
+            <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="text" id="searchKeyword" class="search-input" placeholder="Job title, skills, or company..." onkeydown="if(event.key==='Enter') app.searchJobs()" data-i18n-placeholder="search_keyword_placeholder">
           </div>
-          <div class="search-field" style="flex:1 1 180px;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-            <input type="text" id="searchLocation" class="search-input" placeholder="Location or Remote" onkeydown="if(event.key==='Enter') app.searchJobs()">
+          <div class="search-field search-field-location">
+            <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+            <input type="text" id="searchLocation" class="search-input" placeholder="Bengaluru, Hyderabad, Pune, Remote..." onkeydown="if(event.key==='Enter') app.searchJobs()" data-i18n-placeholder="search_location_placeholder">
           </div>
-          <div class="search-field" style="flex:0 1 160px;">
+          <div class="search-field search-field-type">
+            <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
             <select id="searchJobType" class="search-select" onchange="app.searchJobs()">
-              <option value="">All Job Types</option>
-              <option value="Full-time">Full-time</option>
-              <option value="Part-time">Part-time</option>
-              <option value="Contract">Contract</option>
-              <option value="Remote">Remote</option>
+              <option value="" data-i18n="all_job_types">All Job Types</option>
+              <option value="Full-time" data-i18n="job_type_fulltime">Full-time</option>
+              <option value="Part-time" data-i18n="job_type_parttime">Part-time</option>
+              <option value="Contract" data-i18n="job_type_contract">Contract</option>
+              <option value="Remote" data-i18n="job_type_remote">Remote</option>
             </select>
           </div>
-          <button class="btn-primary" onclick="app.searchJobs()">
-            Search Jobs
+          <button class="btn-primary search-submit-btn" onclick="app.searchJobs()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <span data-i18n="search_jobs_btn">Search Jobs</span>
           </button>
         </div>
       </section>
 
       <!-- Active Job Listings Grid -->
       <div class="panel-header">
-        <h2 class="panel-title" id="jobListingsHeading">Featured Opportunities</h2>
+        <h2 class="panel-title" id="jobListingsHeading" data-i18n="featured_opportunities">Featured Opportunities</h2>
         <span style="font-size:0.9rem; color:var(--text-muted);" id="jobCountLabel">Loading listings...</span>
       </div>
       <div class="job-grid" id="publicJobsGrid">
@@ -460,7 +505,7 @@
               </div>
               <input type="hidden" id="profileResumeUrl">
               <div id="currentResumeDisplay" style="margin-top:0.5rem; font-size:0.85rem; display:none;">
-                Current Resume: <a id="currentResumeLink" href="#" target="_blank" style="color:#60a5fa; text-decoration:underline;">View Resume</a>
+                Current Resume: <a id="currentResumeLink" href="#" target="_blank" style="color:var(--accent-primary); text-decoration:underline;">View Resume</a>
               </div>
             </div>
             <button type="submit" class="btn-primary" style="margin-top:1rem;">Save Profile Changes</button>
@@ -496,7 +541,392 @@
       </div>
     </div>
 
+    <!-- VIEW: ABOUT PAGE -->
+    <div id="viewAbout" style="display:none;">
+      <!-- Navigation / Breadcrumb Header -->
+      <div class="about-top-bar">
+        <button class="btn-secondary btn-sm" onclick="app.showView('jobs'); window.scrollTo({top:0, behavior:'smooth'});">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          Back to Job Opportunities
+        </button>
+        <div class="about-breadcrumb">
+          <span class="crumb-link" onclick="app.showView('jobs'); window.scrollTo({top:0, behavior:'smooth'});">Home</span>
+          <span class="crumb-sep">/</span>
+          <span class="crumb-current">About JobSphere</span>
+        </div>
+      </div>
+
+      <!-- Hero Header -->
+      <section class="about-hero-section">
+        <div class="about-badge-pill">
+          <span class="pulse-dot"></span>
+          <span>Enterprise Career &amp; Talent Ecosystem</span>
+        </div>
+        <h1 class="about-hero-title">Connecting Talent with <span class="hero-gradient">Limitless Opportunity</span></h1>
+        <p class="about-hero-subtitle">
+          JobSphere is an enterprise-grade talent acquisition and career marketplace engineered with Spring Boot 3.x and modern web technologies. We empower candidates, recruiters, and administrators with an intelligent, seamless, and transparent hiring experience.
+        </p>
+        <div class="about-hero-actions">
+          <button class="btn-primary" onclick="app.showView('jobs'); window.scrollTo({top:0, behavior:'smooth'});">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <span>Explore Opportunities</span>
+          </button>
+          <button class="btn-secondary" onclick="app.openDemoModal();">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <span>Instant Role Demo</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid about-stats-grid">
+        <div class="stat-card cyan">
+          <div class="stat-label">Platform Architecture</div>
+          <div class="stat-value">3 Roles</div>
+          <div class="stat-subtext">Admin • Employer • Job Seeker</div>
+        </div>
+        <div class="stat-card purple">
+          <div class="stat-label">Live Telemetry</div>
+          <div class="stat-value">Real-Time</div>
+          <div class="stat-subtext">WebSocket monitoring &amp; instant chat</div>
+        </div>
+        <div class="stat-card emerald">
+          <div class="stat-label">Enterprise Security</div>
+          <div class="stat-value">JWT + RBAC</div>
+          <div class="stat-subtext">Stateless auth &amp; role access control</div>
+        </div>
+        <div class="stat-card amber">
+          <div class="stat-label">Modern Stack</div>
+          <div class="stat-value">Java 17</div>
+          <div class="stat-subtext">Spring Boot 3.x &amp; Hibernate JPA</div>
+        </div>
+      </div>
+
+      <!-- Mission & Platform Pillars -->
+      <div class="about-pillars-grid">
+        <!-- For Job Seekers -->
+        <div class="about-pillar-card">
+          <div class="pillar-icon-box seeker-box">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <h3 class="pillar-title">For Job Seekers</h3>
+          <p class="pillar-desc">Designed to simplify career discovery and showcase talent with transparency.</p>
+          <ul class="pillar-feature-list">
+            <li>
+              <span class="pillar-check">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
+              <span><strong>Instant Job Search:</strong> Filter across keywords, locations, categories, and remote roles</span>
+            </li>
+            <li>
+              <span class="pillar-check">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
+              <span><strong>One-Click Apply:</strong> Attach resumes with cover letters in seconds</span>
+            </li>
+            <li>
+              <span class="pillar-check">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
+              <span><strong>Status Tracking:</strong> Live status indicators from APPLIED to REVIEWED, SHORTLISTED, or HIRED</span>
+            </li>
+            <li>
+              <span class="pillar-check">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
+              <span><strong>Direct Messaging:</strong> Real-time encrypted communication with hiring teams</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- For Employers -->
+        <div class="about-pillar-card">
+          <div class="pillar-icon-box employer-box">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          </div>
+          <h3 class="pillar-title">For Employers</h3>
+          <p class="pillar-desc">Comprehensive recruitment hub for sourcing, evaluating, and securing top talent.</p>
+          <ul class="pillar-feature-list">
+            <li>
+              <span class="pillar-check">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
+              <span><strong>Requisition Management:</strong> Create, edit, and publish job listings effortlessly</span>
+            </li>
+            <li>
+              <span class="pillar-check">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
+              <span><strong>Applicant Pipeline:</strong> Review resumes, candidate profiles, and application histories</span>
+            </li>
+            <li>
+              <span class="pillar-check">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
+              <span><strong>Candidate Engagement:</strong> Initiate real-time chats with shortlisted candidates</span>
+            </li>
+            <li>
+              <span class="pillar-check">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
+              <span><strong>Hiring Decisions:</strong> Transition application states with automatic notifications</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- For System Administrators -->
+        <div class="about-pillar-card">
+          <div class="pillar-icon-box admin-box">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <h3 class="pillar-title">For Administrators</h3>
+          <p class="pillar-desc">Full governance suite ensuring safety, compliance, and platform integrity.</p>
+          <ul class="pillar-feature-list">
+            <li>
+              <span class="pillar-check">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
+              <span><strong>User Moderation:</strong> Full CRUD management over accounts and role assignments</span>
+            </li>
+            <li>
+              <span class="pillar-check">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
+              <span><strong>Listing Approval:</strong> Review, approve, or reject new employer job submissions</span>
+            </li>
+            <li>
+              <span class="pillar-check">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
+              <span><strong>Live Activity Feed:</strong> WebSocket-powered real-time system event telemetry</span>
+            </li>
+            <li>
+              <span class="pillar-check">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
+              <span><strong>System Metrics:</strong> Track total users, active listings, and platform metrics</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Technology Stack Card Panel -->
+      <div class="card-panel about-tech-panel">
+        <div class="panel-header">
+          <div>
+            <h3 class="panel-title">Technology &amp; Engineering Architecture</h3>
+            <p style="font-size:0.9rem; color:var(--text-muted); margin-top:0.25rem;">Built with modern industry standards for high availability, security, and developer velocity.</p>
+          </div>
+          <span class="tech-badge-primary">Full-Stack Java 17</span>
+        </div>
+
+        <div class="about-tech-grid">
+          <div class="tech-item-card">
+            <div class="tech-category-tag">Backend Services</div>
+            <div class="tech-item-name">Spring Boot 3.x &amp; Java 17</div>
+            <p class="tech-item-desc">High-performance REST API services, Spring Data JPA repository abstraction, and Hibernate ORM.</p>
+            <div class="tech-tags-row">
+              <span class="tech-pill">Java 17</span>
+              <span class="tech-pill">Spring Boot 3</span>
+              <span class="tech-pill">Hibernate</span>
+              <span class="tech-pill">Maven</span>
+            </div>
+          </div>
+
+          <div class="tech-item-card">
+            <div class="tech-category-tag">Security &amp; Auth</div>
+            <div class="tech-item-name">Spring Security &amp; JWT</div>
+            <p class="tech-item-desc">Stateless token-based authorization with HMAC SHA-256 signatures and strict role-based access control.</p>
+            <div class="tech-tags-row">
+              <span class="tech-pill">JWT</span>
+              <span class="tech-pill">BCrypt</span>
+              <span class="tech-pill">RBAC</span>
+              <span class="tech-pill">CORS / CSRF</span>
+            </div>
+          </div>
+
+          <div class="tech-item-card">
+            <div class="tech-category-tag">Data Persistence</div>
+            <div class="tech-item-name">Relational Database Engine</div>
+            <p class="tech-item-desc">H2 In-Memory DB for lightning-fast test execution, fully compatible with MySQL 8.0+ and PostgreSQL 13+.</p>
+            <div class="tech-tags-row">
+              <span class="tech-pill">H2 DB</span>
+              <span class="tech-pill">MySQL 8</span>
+              <span class="tech-pill">PostgreSQL</span>
+              <span class="tech-pill">JPA / SQL</span>
+            </div>
+          </div>
+
+          <div class="tech-item-card">
+            <div class="tech-category-tag">Real-Time Messaging</div>
+            <div class="tech-item-name">WebSocket &amp; STOMP</div>
+            <p class="tech-item-desc">Bi-directional event dispatching for admin activity telemetry and direct peer-to-peer employer-seeker chats.</p>
+            <div class="tech-tags-row">
+              <span class="tech-pill">WebSocket</span>
+              <span class="tech-pill">STOMP</span>
+              <span class="tech-pill">SockJS</span>
+              <span class="tech-pill">Event Broker</span>
+            </div>
+          </div>
+
+          <div class="tech-item-card">
+            <div class="tech-category-tag">Frontend &amp; UI/UX</div>
+            <div class="tech-item-name">Modern Glassmorphic SPA</div>
+            <p class="tech-item-desc">High-speed Single Page App (SPA) built with Vanilla JavaScript, semantic HTML5, and curated responsive CSS3 tokens.</p>
+            <div class="tech-tags-row">
+              <span class="tech-pill">Vanilla JS</span>
+              <span class="tech-pill">Modern CSS3</span>
+              <span class="tech-pill">Dark Mode</span>
+              <span class="tech-pill">Responsive</span>
+            </div>
+          </div>
+
+          <div class="tech-item-card">
+            <div class="tech-category-tag">Quality &amp; Testing</div>
+            <div class="tech-item-name">JUnit 5 &amp; Mockito</div>
+            <p class="tech-item-desc">Automated unit and integration test coverage across service layers, repositories, and REST controllers.</p>
+            <div class="tech-tags-row">
+              <span class="tech-pill">JUnit 5</span>
+              <span class="tech-pill">Mockito</span>
+              <span class="tech-pill">Spring Test</span>
+              <span class="tech-pill">CI-Ready</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Call to Action Banner -->
+      <div class="about-cta-banner">
+        <div class="cta-banner-content">
+          <h2 class="cta-banner-title" data-i18n="cta_title">Ready to Experience JobSphere?</h2>
+          <p class="cta-banner-desc" data-i18n="cta_desc">Explore open requisitions, post your first role, or test each persona with our instant demo switcher.</p>
+        </div>
+        <div class="cta-banner-buttons">
+          <button class="btn-primary" onclick="app.showView('jobs'); window.scrollTo({top:0, behavior:'smooth'});">
+            <span data-i18n="cta_explore_jobs">Explore Jobs</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+          <button class="btn-secondary" onclick="app.openDemoModal();">
+            <span data-i18n="cta_try_demo">Try Instant Demo</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
   </main>
+
+  <!-- Site Footer (LinkedIn Style) -->
+  <footer class="site-footer linkedin-style">
+    <!-- Top Columns Area -->
+    <div class="footer-top-wrap">
+      <div class="footer-top-container">
+        <!-- Logo Column (Left side, matching LinkedIn Image 1) -->
+        <div class="footer-logo-col">
+          <div class="footer-brand" onclick="app.showView('jobs'); window.scrollTo({top:0, behavior:'smooth'});">
+            <span class="footer-brand-title">Job<span class="brand-accent-text">Sphere</span></span>
+            <span class="footer-brand-icon-box">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            </span>
+          </div>
+        </div>
+
+        <!-- Links Columns -->
+        <div class="footer-nav-columns">
+          <!-- Column 1: General (Matches User Image 1 exactly!) -->
+          <div class="footer-col">
+            <h4 class="footer-col-heading" data-i18n="footer_general">General</h4>
+            <ul class="footer-col-links">
+              <li><a href="#" onclick="app.openAuthModal('register', 'JOB_SEEKER'); return false;" data-i18n="footer_signup">Sign Up</a></li>
+              <li><a href="#" onclick="app.showToast('Help Center: reach out to support@jobsphere.com', 'info'); return false;" data-i18n="footer_help_center">Help Center</a></li>
+              <li><a href="#" onclick="app.showView('about'); return false;" data-i18n="footer_about">About</a></li>
+              <li><a href="#" onclick="app.showView('jobs'); window.scrollTo({top:0, behavior:'smooth'}); return false;" data-i18n="footer_careers">Careers</a></li>
+              <li><a href="#" onclick="app.showToast('JobSphere Developer REST API endpoints', 'info'); return false;" data-i18n="footer_developers">Developers</a></li>
+            </ul>
+          </div>
+
+          <!-- Column 2: Browse JobSphere -->
+          <div class="footer-col">
+            <h4 class="footer-col-heading" data-i18n="footer_browse">Browse JobSphere</h4>
+            <ul class="footer-col-links">
+              <li><a href="#" onclick="app.showView('jobs'); window.scrollTo({top:0, behavior:'smooth'}); return false;" data-i18n="footer_learning">Learning & Skills</a></li>
+              <li><a href="#" onclick="app.showView('jobs'); window.scrollTo({top:0, behavior:'smooth'}); return false;" data-i18n="footer_jobs">Jobs</a></li>
+              <li><a href="#" onclick="app.loadPublicJobs('Engineering', '', ''); window.scrollTo({top:0, behavior:'smooth'}); return false;" data-i18n="footer_engineering">Engineering</a></li>
+              <li><a href="#" onclick="app.loadPublicJobs('', 'Remote', ''); window.scrollTo({top:0, behavior:'smooth'}); return false;" data-i18n="footer_remote">Remote Opportunities</a></li>
+            </ul>
+          </div>
+
+          <!-- Column 3: Business Solutions -->
+          <div class="footer-col">
+            <h4 class="footer-col-heading" data-i18n="footer_business_solutions">Business Solutions</h4>
+            <ul class="footer-col-links">
+              <li><a href="#" onclick="app.openAuthModal('login', 'EMPLOYER'); return false;" data-i18n="footer_employer_login">Employer Login</a></li>
+              <li><a href="#" onclick="app.openAuthModal('register', 'EMPLOYER'); return false;" data-i18n="footer_post_job">Post a Job</a></li>
+              <li><a href="#" onclick="app.demoLogin('employer@techcorp.com', 'employer123'); return false;" data-i18n="footer_hiring_solutions">Hiring Solutions</a></li>
+              <li><a href="#" onclick="app.showToast('Talent acquisition & automated candidate pipelines', 'info'); return false;" data-i18n="footer_talent_hub">Talent Hub</a></li>
+              <li><a href="#" onclick="app.showToast('Custom enterprise recruitment packages', 'info'); return false;" data-i18n="footer_enterprise_sales">Enterprise Sales</a></li>
+            </ul>
+          </div>
+
+          <!-- Column 4: Directories & Fast Demo -->
+          <div class="footer-col">
+            <h4 class="footer-col-heading" data-i18n="footer_directories">Directories</h4>
+            <ul class="footer-col-links">
+              <li><a href="#" onclick="app.openDemoModal(); return false;"><span class="footer-mini-tag">DEMO</span> <span data-i18n="footer_demo_dialog">Quick Demo Dialog</span></a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Inline Horizontal Bar (Matching User Image 2 exactly!) -->
+    <div class="footer-bottom-strip">
+      <div class="footer-bottom-container">
+        <div class="footer-bottom-brand">
+          <span class="footer-brand-text">Job<span class="brand-accent-text">Sphere</span></span>
+          <span class="footer-brand-box">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          </span>
+          <span class="footer-copy-year">&copy; 2026</span>
+        </div>
+
+        <nav class="footer-legal-nav">
+          <a href="#" onclick="app.showView('about'); return false;" data-i18n="footer_about">About</a>
+          <div class="footer-language-dropdown dropdown-container">
+            <button class="footer-lang-btn" id="footerLangBtn" onclick="app.toggleDropdown('footerLangMenu'); event.stopPropagation();" title="Change display language" aria-haspopup="true" aria-expanded="false">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              <span id="selectedLanguageText">English (India)</span>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <div class="footer-lang-menu dropdown-menu" id="footerLangMenu" onclick="event.stopPropagation();">
+              <div class="footer-lang-header">
+                <div class="footer-lang-header-title">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                  <span data-i18n="footer_select_lang">Select Language</span>
+                </div>
+              </div>
+
+              <div class="footer-lang-list">
+                <button type="button" class="footer-lang-item active" data-lang="en-IN" onclick="app.selectLanguage('en-IN', 'English (India)');">
+                  <div class="footer-lang-text-group">
+                    <span class="footer-lang-primary">English (India)</span>
+                    <span class="footer-lang-secondary">Default Region</span>
+                  </div>
+                  <span class="footer-lang-check">✓</span>
+                </button>
+
+                <button type="button" class="footer-lang-item" data-lang="hi" onclick="app.selectLanguage('hi', 'हिन्दी (Hindi)');">
+                  <div class="footer-lang-text-group">
+                    <span class="footer-lang-primary">हिन्दी</span>
+                    <span class="footer-lang-secondary">Hindi</span>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        </nav>
+      </div>
+    </div>
+  </footer>
 
   <!-- MODAL: LOGIN / REGISTER -->
   <div class="modal-backdrop" id="authModal">
@@ -518,15 +948,15 @@
         </div>
         <button type="submit" class="btn-primary" style="width:100%; justify-content:center;">Sign In</button>
         <p style="text-align:center; font-size:0.85rem; color:var(--text-muted); margin-top:1rem;">
-          Don't have an account? <a href="#" style="color:#60a5fa;" onclick="app.openAuthModal('register')">Create one now</a>
+          Don't have an account? <a href="#" style="color:var(--accent-primary); font-weight:600;" onclick="app.openAuthModal('register')">Create one now</a>
         </p>
       </form>
 
       <!-- Register Form -->
       <form id="registerForm" style="display:none;" onsubmit="app.submitRegister(event)">
         <div class="form-group">
-          <label>Full Name / Company Name</label>
-          <input type="text" id="regName" class="form-control" required placeholder="Alex Morgan or Acme Corp">
+          <label>Full Name</label>
+          <input type="text" id="regName" class="form-control" required placeholder="Alex Morgan">
         </div>
         <div class="form-group">
           <label>Email Address</label>
@@ -537,16 +967,15 @@
           <input type="password" id="regPassword" class="form-control" required placeholder="••••••••">
         </div>
         <div class="form-group">
-          <label>Account Role</label>
+          <label>Role</label>
           <select id="regRole" class="form-control" required>
-            <option value="JOB_SEEKER">Job Seeker (Search & Apply)</option>
-            <option value="EMPLOYER">Employer (Post Jobs & Hire)</option>
-            <option value="ADMIN">System Administrator</option>
+            <option value="JOB_SEEKER">Job Seeker</option>
+            <option value="EMPLOYER">Employer</option>
           </select>
         </div>
         <button type="submit" class="btn-primary" style="width:100%; justify-content:center;">Create Account</button>
         <p style="text-align:center; font-size:0.85rem; color:var(--text-muted); margin-top:1rem;">
-          Already registered? <a href="#" style="color:#60a5fa;" onclick="app.openAuthModal('login')">Sign In</a>
+          Already registered? <a href="#" style="color:var(--accent-primary); font-weight:600;" onclick="app.openAuthModal('login')">Sign In</a>
         </p>
       </form>
     </div>
@@ -558,7 +987,7 @@
       <div class="modal-header">
         <div>
           <h3 class="panel-title" id="applyModalJobTitle">Apply for Job</h3>
-          <span style="font-size:0.85rem; color:#60a5fa;" id="applyModalCompany">Company</span>
+          <span style="font-size:0.85rem; color:var(--accent-primary); font-weight:700;" id="applyModalCompany">Company</span>
         </div>
         <button class="modal-close" onclick="app.closeModals()">&times;</button>
       </div>
@@ -602,7 +1031,7 @@
           </div>
           <div class="form-group">
             <label>Location</label>
-            <input type="text" id="jobLocationInput" class="form-control" placeholder="e.g. San Francisco or Remote" required>
+            <input type="text" id="jobLocationInput" class="form-control" placeholder="e.g. Bengaluru, Hyderabad, Pune or Remote" required>
           </div>
         </div>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.75rem;">
@@ -616,8 +1045,8 @@
             </select>
           </div>
           <div class="form-group">
-            <label>Annual Salary ($ USD)</label>
-            <input type="number" id="jobSalaryInput" class="form-control" placeholder="120000" required>
+            <label>Annual Salary (Rs)</label>
+            <input type="number" id="jobSalaryInput" class="form-control" placeholder="1200000" required>
           </div>
         </div>
         <div class="form-group">
@@ -731,6 +1160,103 @@
         </div>
         <button type="submit" class="btn-primary" style="width:100%; justify-content:center;">Save User Changes</button>
       </form>
+    </div>
+  </div>
+
+
+
+  <!-- MODAL: QUICK DEMO ROLE SWITCHER DIALOG -->
+  <div class="modal-backdrop" id="demoModal">
+    <div class="modal-box demo-dialog-box">
+      <div class="modal-header">
+        <div>
+          <div class="demo-badge-pill">
+            <span class="pulse-dot"></span> Instant Demo
+          </div>
+          <h3 class="panel-title" style="margin-top:0.35rem;">Quick Demo Access</h3>
+          <p class="demo-dialog-subtitle">Select a persona to explore dedicated features and live role dashboards.</p>
+        </div>
+        <button class="modal-close" onclick="app.closeModals()" aria-label="Close dialog">&times;</button>
+      </div>
+
+      <div class="demo-roles-container">
+        <!-- ROLE 1: ADMIN -->
+        <div class="demo-role-card" onclick="app.demoLogin('admin@jobportal.com', 'admin123')" role="button" tabindex="0">
+          <div class="demo-role-icon-wrapper role-admin">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              <path d="m9 12 2 2 4-4"/>
+            </svg>
+          </div>
+          <div class="demo-role-content">
+            <div class="demo-role-top">
+              <span class="demo-role-name">ADMIN</span>
+              <span class="demo-role-badge badge-admin">Platform Oversight</span>
+            </div>
+            <p class="demo-role-desc">Manage all users, review moderation queue for job approvals, monitor live WebSocket system events, and update configuration settings.</p>
+            <div class="demo-role-footer">
+              <span class="demo-role-cred">admin@jobportal.com</span>
+              <span class="demo-role-action">
+                Launch as Admin
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ROLE 2: EMPLOYER -->
+        <div class="demo-role-card" onclick="app.demoLogin('employer@techcorp.com', 'employer123')" role="button" tabindex="0">
+          <div class="demo-role-icon-wrapper role-employer">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="20" height="14" x="2" y="7" rx="2" ry="2"/>
+              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+            </svg>
+          </div>
+          <div class="demo-role-content">
+            <div class="demo-role-top">
+              <span class="demo-role-name">EMPLOYER</span>
+              <span class="demo-role-badge badge-employer">Hiring & Talent</span>
+            </div>
+            <p class="demo-role-desc">Post new job openings, manage applicant pipeline, review resumes, update candidate hiring stages, and message candidates directly.</p>
+            <div class="demo-role-footer">
+              <span class="demo-role-cred">employer@techcorp.com</span>
+              <span class="demo-role-action">
+                Launch as Employer
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ROLE 3: JOB SEEKER -->
+        <div class="demo-role-card" onclick="app.demoLogin('seeker@example.com', 'seeker123')" role="button" tabindex="0">
+          <div class="demo-role-icon-wrapper role-seeker">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+          </div>
+          <div class="demo-role-content">
+            <div class="demo-role-top">
+              <span class="demo-role-name">JOB SEEKER</span>
+              <span class="demo-role-badge badge-seeker">Job Candidate</span>
+            </div>
+            <p class="demo-role-desc">Search and filter active positions, 1-click apply with uploaded resume, track application statuses, and chat with employers.</p>
+            <div class="demo-role-footer">
+              <span class="demo-role-cred">seeker@example.com</span>
+              <span class="demo-role-action">
+                Launch as Job Seeker
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="demo-dialog-footer-hint">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <span>1-click instant login. Click any card above to authenticate immediately.</span>
+      </div>
     </div>
   </div>
 

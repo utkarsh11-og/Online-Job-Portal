@@ -3,7 +3,6 @@ package com.company.jobportal.service;
 import com.company.jobportal.model.SystemSetting;
 import com.company.jobportal.repository.SystemSettingRepository;
 import jakarta.annotation.PostConstruct;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -11,12 +10,14 @@ import java.util.Map;
 
 @Service
 public class SystemSettingServiceImpl implements SystemSettingService {
+    private final SystemSettingRepository systemSettingRepository;
+    private final ActivityLogService activityLogService;
 
-    @Autowired
-    private SystemSettingRepository systemSettingRepository;
-
-    @Autowired
-    private ActivityLogService activityLogService;
+    public SystemSettingServiceImpl(SystemSettingRepository systemSettingRepository,
+                                    ActivityLogService activityLogService) {
+        this.systemSettingRepository = systemSettingRepository;
+        this.activityLogService = activityLogService;
+    }
 
     @PostConstruct
     public void init() {
@@ -52,7 +53,7 @@ public class SystemSettingServiceImpl implements SystemSettingService {
     @Override
     public String getSettingValue(String key, String defaultValue) {
         return systemSettingRepository.findBySettingKey(key)
-                .map(SystemSetting::getSettingValue)
+                .map(s -> s.getSettingValue())
                 .orElse(defaultValue);
     }
 

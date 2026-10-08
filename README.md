@@ -92,17 +92,25 @@ JobSphere connects employers with top talent through dedicated, role-specific po
 
 ---
 
+## 🌐 Live Demo & Deployment
+
+- **Live URL**: [https://jobsphere.antideploy.app](https://jobsphere.antideploy.app)
+- **Deployment Platform**: [Antideploy](https://antideploy.com)
+- **Cloud Database**: Managed PostgreSQL (Neon)
+
+---
+
 ## 👥 Default Demo Credentials
 
 Pre-loaded sample accounts for evaluation:
 
 | Role | Email | Password | Description |
 |---|---|---|---|
-| **Admin** | `admin@jobportal.com` | `password` | Full system administrator access |
-| **Employer** | `techcorp@company.com` | `password` | Cloud Enterprise employer account |
-| **Employer** | `innovate@company.com` | `password` | AI/Tech startup employer account |
-| **Job Seeker** | `john.dev@email.com` | `password` | Senior Java Developer profile |
-| **Job Seeker** | `priya.data@email.com` | `password` | Data Scientist profile |
+| **Admin** | `admin@jobportal.com` | `admin123` | Full system administrator access |
+| **Employer** | `employer@techcorp.com` | `employer123` | Enterprise Cloud employer account |
+| **Employer** | `hr@innovatelabs.io` | `employer123` | AI & Labs employer account |
+| **Job Seeker** | `seeker@example.com` | `seeker123` | Senior Java Developer profile |
+| **Job Seeker** | `sarah@example.com` | `seeker123` | Data Science & ML profile |
 
 ---
 

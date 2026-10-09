@@ -1,7 +1,4 @@
 target/
-*.log
-app-log.txt
-maven.log
 .idea/
 *.iml
 .worktrees/
